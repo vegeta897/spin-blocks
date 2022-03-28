@@ -27,6 +27,7 @@
     "status": "butler status vegeta897/spin-blocks:html5"
   },
   "dependencies": {
+    "@gamestdio/easing": "^1.0.0",
     "three": "^0.139.0",
     "three-csg-ts": "^3.1.10"
   },
