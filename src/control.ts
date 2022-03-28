@@ -1,15 +1,13 @@
 import { Object3D, Quaternion, Vector3 } from 'three'
 import { rotateBlocks } from './puzzle'
 
-export function initControl() {
-  window.addEventListener('keydown', (e) => {
-    if (rotationIndex) return
-    if (e.repeat) return
-    if (!isGameKey(e.code)) return
-    e.preventDefault()
-    rotationIndex = gameKeys.indexOf(e.code)
-  })
-}
+window.addEventListener('keydown', (e) => {
+  if (rotationIndex) return
+  if (e.repeat) return
+  if (!isGameKey(e.code)) return
+  e.preventDefault()
+  rotationIndex = gameKeys.indexOf(e.code)
+})
 
 let rotationIndex: false | number = false
 
@@ -38,4 +36,6 @@ const rotations: [Vector3, number][] = [
   [new Vector3(0, 1, 0), Math.PI / 2],
   [new Vector3(0, 1, 0), -Math.PI / 2],
 ]
-const rotationQuaternions = rotations.map(([axis, angle]) => new Quaternion().setFromAxisAngle(axis, angle))
+const rotationQuaternions = rotations.map(([axis, angle]) =>
+  new Quaternion().setFromAxisAngle(axis, angle)
+)

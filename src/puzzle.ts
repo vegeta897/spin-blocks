@@ -76,7 +76,6 @@ export function rotateBlocks(puzzleBlocks: Object3D[], axis: Vector3, angle: num
 }
 
 export function getInvalidBlocks(clumpBlocks: Object3D[], flatBlocks: Object3D[]): Object3D[] {
-  console.log(clumpBlocks.map((cb) => cb.position))
   return clumpBlocks.filter(
     (clumpBlock) =>
       !flatBlocks.some((flatBlock) => xyIsEqual(flatBlock.position, clumpBlock.position))
