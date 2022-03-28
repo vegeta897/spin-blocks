@@ -1,29 +1,34 @@
-import { BoxGeometry, Mesh, MeshPhongMaterial } from 'three'
+import { BoxGeometry, Mesh, MeshPhongMaterial, Vector3 } from 'three'
 import { CSG } from 'three-csg-ts'
-import { randomInt } from './util'
+import { get6Neighbors, pickRandom } from './util'
 
 const SIZE = 7
+const HALF = Math.floor(SIZE / 2)
+const BLOCKS = 6
 
-const xyToCoord = (x: number, y: number): number => x * SIZE + y
-const coordToXY = (coord: number): [number, number] => [Math.floor(coord / SIZE), coord % SIZE]
+const vec3ToString = (vec3: Vector3): string => vec3.toArray().join(':')
+const stringToVec3 = (str: string): Vector3 => new Vector3().fromArray(str.split(':').map((c) => +c))
 
-export function createPuzzle(): Set<number> {
-  const puzzleBlockCoords: Set<number> = new Set()
-  while (puzzleBlockCoords.size < 4) {
-    const x = randomInt(0, SIZE - 1)
-    const y = randomInt(0, SIZE - 1)
-    console.log(x, y)
-    puzzleBlockCoords.add(xyToCoord(x, y))
+export function createPuzzle(): Set<string> {
+  const puzzleBlockCoords: Set<string> = new Set()
+  const nextBlocks: Set<string> = new Set([vec3ToString(new Vector3())])
+  while (puzzleBlockCoords.size < BLOCKS && nextBlocks.size > 0) {
+    const nextBlock = pickRandom([...nextBlocks])
+    nextBlocks.delete(nextBlock)
+    puzzleBlockCoords.add(nextBlock)
+    get6Neighbors(stringToVec3(nextBlock)).forEach((neighborVector) => {
+      if (neighborVector.length() <= HALF) nextBlocks.add(vec3ToString(neighborVector))
+    })
   }
   return puzzleBlockCoords
 }
 
-export function createBlocks(puzzleBlockCoords: Set<number>): Mesh[] {
+export function createBlocks(puzzleBlockCoords: Set<string>): Mesh[] {
   const blocksMaterial = new MeshPhongMaterial({ color: '#fcba15' })
   return [...puzzleBlockCoords].map((coord) => {
-    const [x, y] = coordToXY(coord)
+    const blockVector = stringToVec3(coord)
     const block = new Mesh(new BoxGeometry(), blocksMaterial)
-    block.position.set(x - Math.floor(SIZE / 2), y - Math.floor(SIZE / 2), 0)
+    block.position.copy(blockVector)
     block.updateMatrix()
     return block
   })
@@ -41,7 +46,10 @@ export function createWall(puzzleBlocks: Mesh[]): Mesh {
   const wallMaterial = new MeshPhongMaterial({ color: '#d22573' })
   let wall: Mesh = new Mesh(new BoxGeometry(9, 9, 1), wallMaterial)
   for (const puzzleBlock of puzzleBlocks) {
-    wall = CSG.subtract(wall, puzzleBlock)
+    const blockInWall = puzzleBlock.clone()
+    blockInWall.position.z = 0
+    blockInWall.updateMatrix()
+    wall = CSG.subtract(wall, blockInWall)
   }
   wall.position.z = -20
   return wall
