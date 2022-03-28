@@ -21,6 +21,7 @@ export function createPuzzle(): Set<string> {
       if (neighborVector.length() <= HALF) nextBlocks.add(vec3ToString(neighborVector))
     })
   }
+  // TODO: Center result on 0,0
   return puzzleBlockCoords
 }
 
@@ -37,10 +38,16 @@ export function createBlocks(puzzleBlockCoords: Set<string>): Mesh[] {
   })
 }
 
-export function rotateBlocks(puzzleBlocks: Object3D[], axis: Vector3, angle: number) {
-  puzzleBlocks.forEach((block) => {
-    block.position.applyAxisAngle(axis, angle)
-  })
+export function getFlatBlocks(puzzleBlocks: Mesh[]): Mesh[] {
+  const flatBlocks: Mesh[] = []
+  for (const block of puzzleBlocks) {
+    if (flatBlocks.some((fb) => xyIsEqual(fb.position, block.position))) continue
+    const flatBlock = block.clone()
+    flatBlock.position.z = 0
+    flatBlock.updateMatrix()
+    flatBlocks.push(flatBlock)
+  }
+  return flatBlocks
 }
 
 export function createClump(puzzleBlocks: Mesh[]) {
@@ -52,14 +59,30 @@ export function createClump(puzzleBlocks: Mesh[]) {
   return clump
 }
 
-export function createWall(puzzleBlocks: Mesh[]): Mesh {
+export function createWall(flatBlocks: Mesh[]): Mesh {
   const wallMaterial = new MeshPhongMaterial({ color: '#d22573' })
   let wall: Mesh = new Mesh(new BoxGeometry(9, 9, 1), wallMaterial)
-  for (const puzzleBlock of puzzleBlocks) {
-    const blockInWall = puzzleBlock.clone()
-    blockInWall.position.z = 0
-    blockInWall.updateMatrix()
-    wall = CSG.subtract(wall, blockInWall)
+  for (const puzzleBlock of flatBlocks) {
+    wall = CSG.subtract(wall, puzzleBlock)
   }
   return wall
+}
+
+export function rotateBlocks(puzzleBlocks: Object3D[], axis: Vector3, angle: number) {
+  puzzleBlocks.forEach((block) => {
+    block.position.applyAxisAngle(axis, angle)
+    block.position.round()
+  })
+}
+
+export function getInvalidBlocks(clumpBlocks: Object3D[], flatBlocks: Object3D[]): Object3D[] {
+  console.log(clumpBlocks.map((cb) => cb.position))
+  return clumpBlocks.filter(
+    (clumpBlock) =>
+      !flatBlocks.some((flatBlock) => xyIsEqual(flatBlock.position, clumpBlock.position))
+  )
+}
+
+function xyIsEqual(v1: Vector3, v2: Vector3) {
+  return v1.x === v2.x && v1.y === v2.y
 }

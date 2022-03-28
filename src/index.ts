@@ -10,7 +10,14 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three'
-import { createPuzzle, createBlocks, createWall, createClump } from './puzzle'
+import {
+  createPuzzle,
+  createBlocks,
+  createWall,
+  createClump,
+  getFlatBlocks,
+  getInvalidBlocks,
+} from './puzzle'
 import { initControl, renderClump } from './control'
 
 const scene = new Scene()
@@ -27,13 +34,14 @@ scene.add(axesHelper)
 
 const puzzleBlockCoords = createPuzzle()
 const blocks = createBlocks(puzzleBlockCoords)
+const flatBlocks = getFlatBlocks(blocks)
+const wall = createWall(flatBlocks)
+wall.position.z = -5
 const clump = createClump(blocks)
-const wall = createWall(blocks)
-wall.position.z = -50
-scene.add(clump)
 scene.add(wall)
+scene.add(clump)
 
-camera.position.set(8, 0, 5)
+camera.position.set(8, 5, 5)
 camera.lookAt(new Vector3(0, 0, -10))
 
 const ambientLight = new AmbientLight('#5d275d', 1)
@@ -48,8 +56,12 @@ initControl()
 
 function animate() {
   requestAnimationFrame(animate)
-  wall.position.z += 0.2
-  if (wall.position.z >= 5) wall.position.z = -50
+  wall.position.z += 0.02
+  if (wall.position.z >= 5) {
+    wall.position.z = -5
+    const invalidBlocks = getInvalidBlocks(clump.children, flatBlocks)
+    invalidBlocks.forEach((b) => b.removeFromParent())
+  }
   renderClump(clump)
   renderer.render(scene, camera)
 }
