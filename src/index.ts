@@ -5,6 +5,7 @@ import {
   Color,
   DirectionalLight,
   PerspectiveCamera,
+  Quaternion,
   Scene,
   Vector3,
   WebGLRenderer,
@@ -20,7 +21,7 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
 const axesHelper = new AxesHelper(3)
-axesHelper.position.set(0, 0, -19)
+axesHelper.position.set(0, -4.5, -10)
 scene.add(axesHelper)
 
 const puzzleBlockCoords = createPuzzle()
@@ -43,8 +44,8 @@ scene.add(directionalLight.target)
 
 function animate() {
   requestAnimationFrame(animate)
-  wall.position.z += 0.1
-  if (wall.position.z >= 5) wall.position.z = -20
+  wall.position.z += 0.2
+  if (wall.position.z >= 5) wall.position.z = -50
   renderer.render(scene, camera)
 }
 animate()
@@ -54,3 +55,26 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
 })
+
+const isGameKey = (key: string): key is GameKey => gameKeys.includes(key as GameKey)
+
+window.addEventListener('keydown', (e) => {
+  if (e.repeat) return
+  if (!isGameKey(e.code)) return
+  e.preventDefault()
+  clump.quaternion.multiply(rotations[gameKeys.indexOf(e.code)])
+  clump.updateMatrix()
+  clump.geometry.applyMatrix4(clump.matrix)
+  clump.rotation.set(0, 0, 0)
+  clump.position.set(0, 0, 0)
+})
+type GameKey = typeof gameKeys[number]
+const gameKeys = ['KeyW', 'KeyS', 'KeyD', 'KeyA', 'KeyQ', 'KeyE'] as const
+const rotations = [
+  new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2),
+  new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2),
+  new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), -Math.PI / 2),
+  new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2),
+  new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 2),
+  new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2),
+]

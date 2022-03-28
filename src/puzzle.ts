@@ -51,6 +51,6 @@ export function createWall(puzzleBlocks: Mesh[]): Mesh {
     blockInWall.updateMatrix()
     wall = CSG.subtract(wall, blockInWall)
   }
-  wall.position.z = -20
+  wall.position.z = -50
   return wall
 }
