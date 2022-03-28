@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, MeshPhongMaterial, Vector3 } from 'three'
+import { BoxGeometry, Mesh, MeshPhongMaterial, Object3D, Vector3 } from 'three'
 import { CSG } from 'three-csg-ts'
 import { get6Neighbors, pickRandom } from './util'
 
@@ -7,7 +7,8 @@ const HALF = Math.floor(SIZE / 2)
 const BLOCKS = 6
 
 const vec3ToString = (vec3: Vector3): string => vec3.toArray().join(':')
-const stringToVec3 = (str: string): Vector3 => new Vector3().fromArray(str.split(':').map((c) => +c))
+const stringToVec3 = (str: string): Vector3 =>
+  new Vector3().fromArray(str.split(':').map((c) => +c))
 
 export function createPuzzle(): Set<string> {
   const puzzleBlockCoords: Set<string> = new Set()
@@ -23,22 +24,31 @@ export function createPuzzle(): Set<string> {
   return puzzleBlockCoords
 }
 
+const colors = ['#fcba15', '#e5fc15', '#94fc15', '#15fc43', '#15fce9', '#1581fc']
+
 export function createBlocks(puzzleBlockCoords: Set<string>): Mesh[] {
-  const blocksMaterial = new MeshPhongMaterial({ color: '#fcba15' })
+  let color = 0
   return [...puzzleBlockCoords].map((coord) => {
     const blockVector = stringToVec3(coord)
-    const block = new Mesh(new BoxGeometry(), blocksMaterial)
+    const block = new Mesh(new BoxGeometry(), new MeshPhongMaterial({ color: colors[color++] }))
     block.position.copy(blockVector)
     block.updateMatrix()
     return block
   })
 }
 
+export function rotateBlocks(puzzleBlocks: Object3D[], axis: Vector3, angle: number) {
+  puzzleBlocks.forEach((block) => {
+    block.position.applyAxisAngle(axis, angle)
+  })
+}
+
 export function createClump(puzzleBlocks: Mesh[]) {
-  let clump: Mesh = [...puzzleBlocks].pop()!
+  const clump = new Object3D()
   for (const puzzleBlock of puzzleBlocks) {
-    clump = CSG.union(clump, puzzleBlock)
+    clump.attach(puzzleBlock)
   }
+  clump.position.set(0, 0, 0)
   return clump
 }
 
@@ -51,6 +61,5 @@ export function createWall(puzzleBlocks: Mesh[]): Mesh {
     blockInWall.updateMatrix()
     wall = CSG.subtract(wall, blockInWall)
   }
-  wall.position.z = -50
   return wall
 }
