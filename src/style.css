@@ -5,4 +5,13 @@
 
 body {
   background-color: #330f1f;
+  font-family: 'Arial Black', serif;
+}
+
+main {
+  position: relative;
+}
+main > * {
+  position: absolute;
+  top: 0;
 }

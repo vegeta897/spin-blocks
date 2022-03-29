@@ -25,6 +25,7 @@ let renderer: WebGLRenderer
 
 export const initRenderer = (canvas: HTMLCanvasElement) => {
   const coldStart = !renderer
+  if (!coldStart) renderer.dispose()
   renderer = new WebGLRenderer({ antialias: true, canvas })
   renderer.setPixelRatio(window.devicePixelRatio)
   resize()

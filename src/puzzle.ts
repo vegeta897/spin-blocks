@@ -1,19 +1,21 @@
 import { BoxGeometry, Mesh, MeshPhongMaterial, Object3D, Vector3 } from 'three'
 import { CSG } from 'three-csg-ts'
 import { get6Neighbors, pickRandom } from './util'
+import { get } from 'svelte/store'
+import { blocks } from './store'
 
 const SIZE = 7
 const HALF = Math.floor(SIZE / 2)
-const BLOCKS = 6
 
 const vec3ToString = (vec3: Vector3): string => vec3.toArray().join(':')
 const stringToVec3 = (str: string): Vector3 =>
   new Vector3().fromArray(str.split(':').map((c) => +c))
 
 export function createPuzzle(): Set<string> {
+  const blockCount = get(blocks)
   const puzzleBlockCoords: Set<string> = new Set()
   const nextBlocks: Set<string> = new Set([vec3ToString(new Vector3())])
-  while (puzzleBlockCoords.size < BLOCKS && nextBlocks.size > 0) {
+  while (puzzleBlockCoords.size < blockCount && nextBlocks.size > 0) {
     const nextBlock = pickRandom([...nextBlocks])
     nextBlocks.delete(nextBlock)
     puzzleBlockCoords.add(nextBlock)

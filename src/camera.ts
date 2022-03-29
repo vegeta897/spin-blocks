@@ -11,16 +11,16 @@ let cameraY = 0
 
 window.addEventListener('mousemove', (e) => {
   const halfWidth = window.innerWidth / 2
-  if (e.offsetX > halfWidth) {
-    cameraX = sineOut((e.offsetX - halfWidth) / halfWidth) * LEFT
+  if (e.clientX > halfWidth) {
+    cameraX = sineOut((e.clientX - halfWidth) / halfWidth) * LEFT
   } else {
-    cameraX = sineOut(1 - e.offsetX / halfWidth) * RIGHT
+    cameraX = sineOut(1 - e.clientX / halfWidth) * RIGHT
   }
   const halfHeight = window.innerHeight / 2
-  if (e.offsetY > halfHeight) {
-    cameraY = sineOut((e.offsetY - halfHeight) / halfHeight) * TOP
+  if (e.clientY > halfHeight) {
+    cameraY = sineOut((e.clientY - halfHeight) / halfHeight) * TOP
   } else {
-    cameraY = sineOut(1 - e.offsetY / halfHeight) * BOTTOM
+    cameraY = sineOut(1 - e.clientY / halfHeight) * BOTTOM
   }
 })
 
