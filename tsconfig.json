@@ -3,15 +3,21 @@
     "target": "ES2020",
     "module": "ES2020" /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', or 'ESNext'. */,
     "strict": true,
+    /**
+			svelte-preprocess cannot figure out whether you have a value or a type, so tell TypeScript
+			to enforce using \`import type\` instead of \`import\` for Types.
+		*/
+    "importsNotUsedAsValues": "error",
+    "sourceMap": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "mini-signals": ["./node_modules/resource-loader/typings/mini-signals.d.ts"],
+      "mini-signals": ["./node_modules/resource-loader/typings/mini-signals.d.ts"]
     },
     "skipLibCheck": false,
-    "lib": ["DOM", "ES2021"],
+    "lib": ["DOM", "ES2020"],
     "resolveJsonModule": true,
     "types": [
       "svelte",
@@ -22,6 +28,6 @@
       "svelte/easing"
     ]
   },
-  "include": ["./src/*"],
+  "include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts", "src/**/*.svelte"],
   "exclude": ["node_modules/*", "dist/*"]
 }
