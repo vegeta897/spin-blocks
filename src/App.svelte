@@ -1,11 +1,20 @@
-<script lang="ts">
-  import { initRenderer } from './game'
-  import { onMount } from 'svelte'
-  import HUD from './HUD.svelte'
+<script lang="ts" context="module">
+  import { initGame, stopGame } from './game'
+  console.log('App.svelte module init')
+</script>
 
+<script lang="ts">
+  import { onDestroy, onMount } from 'svelte'
+  import HUD from './HUD.svelte'
+  console.log('App.svelte component init')
   let threeCanvas: HTMLCanvasElement
   onMount(() => {
-    initRenderer(threeCanvas)
+    console.log('app onMount')
+    initGame(threeCanvas)
+  })
+  onDestroy(() => {
+    console.log('app onDestroy')
+    stopGame()
   })
 </script>
 

@@ -9,7 +9,7 @@ const BOTTOM = -4.5
 let cameraX = 0
 let cameraY = 0
 
-window.addEventListener('mousemove', (e) => {
+function onMouseMove(e: MouseEvent) {
   const halfWidth = window.innerWidth / 2
   if (e.clientX > halfWidth) {
     cameraX = sineOut((e.clientX - halfWidth) / halfWidth) * LEFT
@@ -22,7 +22,15 @@ window.addEventListener('mousemove', (e) => {
   } else {
     cameraY = sineOut(1 - e.clientY / halfHeight) * BOTTOM
   }
-})
+}
+
+export function initCamera() {
+  window.addEventListener('mousemove', onMouseMove)
+}
+
+export function stopCamera() {
+  window.removeEventListener('mousemove', onMouseMove)
+}
 
 const lookAt = new Vector3(0, 0, -10)
 

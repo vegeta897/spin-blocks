@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { blocks } from './store'
+  import { blockCount } from './store'
 </script>
 
 <div id="HUD">
-  <h2>{$blocks}<small>blocks</small></h2>
+  <h2>{$blockCount}<small>block{$blockCount > 1 ? 's' : ''}</small></h2>
 </div>
 
 <style>

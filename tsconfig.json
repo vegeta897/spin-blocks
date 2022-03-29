@@ -9,7 +9,6 @@
     "baseUrl": ".",
     "paths": {
       "mini-signals": ["./node_modules/resource-loader/typings/mini-signals.d.ts"],
-      "src/*": ["src/*"]
     },
     "skipLibCheck": false,
     "lib": ["DOM", "ES2021"],
@@ -23,6 +22,6 @@
       "svelte/easing"
     ]
   },
-  "include": ["./src/index.ts"],
+  "include": ["./src/*"],
   "exclude": ["node_modules/*", "dist/*"]
 }

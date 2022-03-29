@@ -1,3 +1,3 @@
 import { Writable, writable } from 'svelte/store'
-
-export const blocks: Writable<number> = writable(6)
+console.log('store init')
+export const blockCount: Writable<number> = writable(6)

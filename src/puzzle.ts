@@ -2,7 +2,7 @@ import { BoxGeometry, Mesh, MeshPhongMaterial, Object3D, Vector3 } from 'three'
 import { CSG } from 'three-csg-ts'
 import { get6Neighbors, pickRandom } from './util'
 import { get } from 'svelte/store'
-import { blocks } from './store'
+import { blockCount } from './store'
 
 const SIZE = 7
 const HALF = Math.floor(SIZE / 2)
@@ -12,10 +12,9 @@ const stringToVec3 = (str: string): Vector3 =>
   new Vector3().fromArray(str.split(':').map((c) => +c))
 
 export function createPuzzle(): Set<string> {
-  const blockCount = get(blocks)
   const puzzleBlockCoords: Set<string> = new Set()
   const nextBlocks: Set<string> = new Set([vec3ToString(new Vector3())])
-  while (puzzleBlockCoords.size < blockCount && nextBlocks.size > 0) {
+  while (puzzleBlockCoords.size < get(blockCount) && nextBlocks.size > 0) {
     const nextBlock = pickRandom([...nextBlocks])
     nextBlocks.delete(nextBlock)
     puzzleBlockCoords.add(nextBlock)
@@ -33,7 +32,10 @@ export function createBlocks(puzzleBlockCoords: Set<string>): Mesh[] {
   let color = 0
   return [...puzzleBlockCoords].map((coord) => {
     const blockVector = stringToVec3(coord)
-    const block = new Mesh(new BoxGeometry(), new MeshPhongMaterial({ color: colors[color++] }))
+    const block = new Mesh(
+      new BoxGeometry(),
+      new MeshPhongMaterial({ color: colors[color++ % colors.length] })
+    )
     block.position.copy(blockVector)
     block.updateMatrix()
     return block

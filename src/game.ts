@@ -7,30 +7,20 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three'
-import {
-  createPuzzle,
-  createBlocks,
-  createWall,
-  createClump,
-  getFlatBlocks,
-  getInvalidBlocks,
-} from './puzzle'
-import { renderClump } from './control'
-import { updateCamera } from './camera'
+import { createPuzzle, createBlocks, createWall, createClump, getFlatBlocks } from './puzzle'
+import { initControls, renderClump, stopControls } from './control'
+import { initCamera, stopCamera, updateCamera } from './camera'
+import { update } from './loop'
+
+const gameInstance = Math.floor(Math.random() * 100000)
+console.log(`game.ts init ${gameInstance}`)
+
+let gameState: undefined | 'running' | 'stopped'
 
 const scene = new Scene()
 scene.background = new Color('#330f1f')
 const camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
 let renderer: WebGLRenderer
-
-export const initRenderer = (canvas: HTMLCanvasElement) => {
-  const coldStart = !renderer
-  if (!coldStart) renderer.dispose()
-  renderer = new WebGLRenderer({ antialias: true, canvas })
-  renderer.setPixelRatio(window.devicePixelRatio)
-  resize()
-  if (coldStart) animate()
-}
 
 const axesHelper = new AxesHelper(3)
 axesHelper.position.set(0, -4.5, -10)
@@ -54,13 +44,9 @@ scene.add(directionalLight)
 scene.add(directionalLight.target)
 
 function animate() {
+  if (gameState === 'stopped') return
   requestAnimationFrame(animate)
-  wall.position.z += 0.15
-  if (wall.position.z >= 3) {
-    wall.position.z = -50
-    const invalidBlocks = getInvalidBlocks(clump.children, flatBlocks)
-    invalidBlocks.forEach((b) => b.removeFromParent())
-  }
+  update(wall, clump, flatBlocks)
   renderClump(clump)
   updateCamera(camera)
   renderer.render(scene, camera)
@@ -72,4 +58,23 @@ function resize() {
   camera.updateProjectionMatrix()
 }
 
-window.addEventListener('resize', resize)
+export const initGame = (canvas: HTMLCanvasElement) => {
+  renderer = new WebGLRenderer({ antialias: true, canvas })
+  renderer.setPixelRatio(window.devicePixelRatio)
+  resize()
+  if (!gameState) {
+    animate()
+    initCamera()
+    initControls()
+    window.addEventListener('resize', resize)
+    gameState = 'running'
+  }
+}
+
+export const stopGame = () => {
+  gameState = 'stopped'
+  renderer.dispose()
+  stopCamera()
+  stopControls()
+  window.removeEventListener('resize', resize)
+}

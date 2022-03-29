@@ -1,14 +1,6 @@
 import { Object3D, Quaternion, Vector3 } from 'three'
 import { rotateBlocks } from './puzzle'
 
-window.addEventListener('keydown', (e) => {
-  if (rotationIndex) return
-  if (e.repeat) return
-  if (!isGameKey(e.code)) return
-  e.preventDefault()
-  rotationIndex = gameKeys.indexOf(e.code)
-})
-
 let rotationIndex: false | number = false
 
 let rotateFrame = 0
@@ -25,6 +17,14 @@ export function renderClump(clump: Object3D) {
   }
 }
 
+function onKeyDown(e: KeyboardEvent) {
+  if (rotationIndex) return
+  if (e.repeat) return
+  if (!isGameKey(e.code)) return
+  e.preventDefault()
+  rotationIndex = gameKeys.indexOf(e.code)
+}
+
 const isGameKey = (key: string): key is GameKey => gameKeys.includes(key as GameKey)
 type GameKey = typeof gameKeys[number]
 const gameKeys = ['KeyS', 'KeyW', 'KeyA', 'KeyD', 'KeyQ', 'KeyE'] as const
@@ -39,3 +39,11 @@ const rotations: [Vector3, number][] = [
 const rotationQuaternions = rotations.map(([axis, angle]) =>
   new Quaternion().setFromAxisAngle(axis, angle)
 )
+
+export function initControls() {
+  window.addEventListener('keydown', onKeyDown)
+}
+
+export function stopControls() {
+  window.removeEventListener('keydown', onKeyDown)
+}

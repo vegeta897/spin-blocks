@@ -1,2 +1,3 @@
-# spin-blocks
+# SpinBlocks
+
 An experiment inspired by SuperHyperCube
