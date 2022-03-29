@@ -8,17 +8,55 @@ const merge = require('webpack-merge').merge
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
+const SveltePreprocess = require('svelte-preprocess')
+const Autoprefixer = require('autoprefixer')
 
 module.exports = (env) => {
+  const devMode = env.mode === 'development'
+
   const config = {
-    entry: './src/index.ts',
+    entry: { bundle: ['./src/index.ts', './src/style.css'] },
 
     resolve: {
-      extensions: ['.ts', '.tsx', '.js', '.json'],
+      alias: { svelte: path.resolve('node_modules', 'svelte') },
+      extensions: ['.ts', '.js', '.mjs', '.svelte', '.json'],
+      mainFields: ['svelte', 'browser', 'module', 'main'],
     },
 
     module: {
       rules: [
+        {
+          test: /\.svelte$/,
+          use: {
+            loader: 'svelte-loader',
+            options: {
+              compilerOptions: {
+                dev: devMode,
+              },
+              emitCss: !devMode,
+              hotReload: devMode,
+              hotOptions: {
+                // List of options and defaults: https://www.npmjs.com/package/svelte-loader-hot#usage
+                noPreserveState: false,
+                optimistic: true,
+              },
+              preprocess: SveltePreprocess({
+                scss: true,
+                sass: true,
+                postcss: {
+                  plugins: [Autoprefixer],
+                },
+              }),
+            },
+          },
+        },
+        // Required to prevent errors from Svelte on Webpack 5+
+        {
+          test: /node_modules\/svelte\/.*\.mjs$/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
         {
           test: /\.css$/i,
           use: [
@@ -55,9 +93,9 @@ module.exports = (env) => {
       }),
     ],
   }
-  const envConfig = require(path.resolve(__dirname, `./webpack.${env.mode || 'development'}.js`))(env)
+  const envConfig = require(path.resolve(__dirname, `./webpack.${env.mode || 'development'}.js`))(
+    env
+  )
 
-  const mergedConfig = merge(config, envConfig)
-
-  return mergedConfig
+  return merge(config, envConfig)
 }

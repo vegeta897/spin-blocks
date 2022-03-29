@@ -6,12 +6,23 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
+    "baseUrl": ".",
     "paths": {
-      "mini-signals": ["./node_modules/resource-loader/typings/mini-signals.d.ts"]
+      "mini-signals": ["./node_modules/resource-loader/typings/mini-signals.d.ts"],
+      "src/*": ["src/*"]
     },
     "skipLibCheck": false,
     "lib": ["DOM", "ES2021"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "types": [
+      "svelte",
+      "svelte/store",
+      "svelte/motion",
+      "svelte/transition",
+      "svelte/animate",
+      "svelte/easing"
+    ]
   },
-  "include": ["./src/index.ts"]
+  "include": ["./src/index.ts"],
+  "exclude": ["node_modules/*", "dist/*"]
 }

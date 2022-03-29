@@ -16,13 +16,14 @@ module.exports = (env) => {
 
     devServer: {
       open: true,
+      hot: true,
     },
 
     module: {
       rules: [
         {
-          test: /\.(ts|tsx)$/,
-          exclude: /(node_modules|bower_components)/,
+          test: /\.ts$/,
+          exclude: /(node_modules)/,
           use: {
             loader: 'swc-loader',
             options: {

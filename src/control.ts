@@ -31,10 +31,10 @@ const gameKeys = ['KeyS', 'KeyW', 'KeyA', 'KeyD', 'KeyQ', 'KeyE'] as const
 const rotations: [Vector3, number][] = [
   [new Vector3(1, 0, 0), Math.PI / 2],
   [new Vector3(1, 0, 0), -Math.PI / 2],
-  [new Vector3(0, 0, 1), Math.PI / 2],
-  [new Vector3(0, 0, 1), -Math.PI / 2],
   [new Vector3(0, 1, 0), Math.PI / 2],
   [new Vector3(0, 1, 0), -Math.PI / 2],
+  [new Vector3(0, 0, 1), Math.PI / 2],
+  [new Vector3(0, 0, 1), -Math.PI / 2],
 ]
 const rotationQuaternions = rotations.map(([axis, angle]) =>
   new Quaternion().setFromAxisAngle(axis, angle)

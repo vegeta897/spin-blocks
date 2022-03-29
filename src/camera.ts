@@ -1,10 +1,10 @@
 import { PerspectiveCamera, Vector3 } from 'three'
 import { sineOut } from '@gamestdio/easing'
 
-const LEFT = -4
-const RIGHT = 4
-const TOP = 4
-const BOTTOM = -4
+const LEFT = -4.5
+const RIGHT = 4.5
+const TOP = 4.5
+const BOTTOM = -4.5
 
 let cameraX = 0
 let cameraY = 0
