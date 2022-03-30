@@ -15,16 +15,8 @@ const Down = new Vector3(0, -1, 0)
 const Forward = new Vector3(0, 0, 1)
 const Back = new Vector3(0, 0, -1)
 
-const cardinalDirections = [Right, Left, Up, Down, Forward, Back]
+export const CardinalAxes = [Right, Left, Up, Down, Forward, Back]
 
 export function get6Neighbors(origin = new Vector3()): Vector3[] {
-  return cardinalDirections.map((dir) => origin.clone().add(dir))
+  return CardinalAxes.map((dir) => origin.clone().add(dir))
 }
-
-// Axes of rotation
-export const PitchUp = Right
-export const PitchDown = Left
-export const YawLeft = Up
-export const YawRight = Down
-export const RollLeft = Forward
-export const RollRight = Back

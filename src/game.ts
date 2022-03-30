@@ -7,7 +7,7 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three'
-import { createWall, createClump } from './puzzle'
+import { createWall, createClump, randomizeRotation } from './puzzle'
 import { initControls, animateClump, stopControls } from './control'
 import { initCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
@@ -30,6 +30,7 @@ axesHelper.position.set(0, -4.5, -10)
 scene.add(axesHelper)
 
 const clump = createClump()
+randomizeRotation(clump.blocks)
 const wall = createWall(clump.flatBlocks)
 wall.position.z = -50
 scene.add(wall)

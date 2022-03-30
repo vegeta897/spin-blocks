@@ -1,6 +1,6 @@
 import { BoxGeometry, Mesh, MeshPhongMaterial, Object3D, Vector3 } from 'three'
 import { CSG } from 'three-csg-ts'
-import { get6Neighbors, pickRandom } from './util'
+import { CardinalAxes, get6Neighbors, pickRandom, randomInt } from './util'
 import { get } from 'svelte/store'
 import { blockCount } from './store'
 
@@ -73,17 +73,28 @@ export function createClump(): Clump {
   return clump
 }
 
+export function randomizeRotation(blocks: Object3D[]) {
+  // Pitch up, yaw left, roll left
+  ;[CardinalAxes[0], CardinalAxes[2], CardinalAxes[4]].forEach((axis) => {
+    const rotations = randomInt(0, 3)
+    for (let i = 0; i < rotations; i++) {
+      rotateBlocks(blocks, axis)
+    }
+  })
+  // TODO: Ensure final result does not equal initial state
+}
+
 export function createWall(flatBlocks: Mesh[]): Mesh {
   const wallMaterial = new MeshPhongMaterial({ color: '#d22573' })
   let wall: Mesh = new Mesh(new BoxGeometry(9, 9, 1), wallMaterial)
-  for (const puzzleBlock of flatBlocks) {
-    wall = CSG.subtract(wall, puzzleBlock)
+  for (const flatBlock of flatBlocks) {
+    wall = CSG.subtract(wall, flatBlock)
   }
   return wall
 }
 
-export function rotateBlocks(puzzleBlocks: Object3D[], axis: Vector3) {
-  puzzleBlocks.forEach((block) => {
+export function rotateBlocks(blocks: Object3D[], axis: Vector3) {
+  blocks.forEach((block) => {
     block.position.applyAxisAngle(axis, Math.PI / 2)
     block.position.round()
   })

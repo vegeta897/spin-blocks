@@ -1,6 +1,6 @@
-import { Quaternion, Vector3 } from 'three'
+import { Quaternion } from 'three'
 import { Clump, rotateBlocks } from './puzzle'
-import { PitchDown, PitchUp, RollLeft, RollRight, YawLeft, YawRight } from './util'
+import { CardinalAxes } from './util'
 
 let rotationIndex: false | number = false
 
@@ -15,7 +15,7 @@ export function animateClump(clump: Clump) {
   )
   if (rotateFrame === rotateFrames) {
     clump.container.rotation.set(0, 0, 0)
-    rotateBlocks(clump.blocks, rotationAxes[rotationIndex])
+    rotateBlocks(clump.blocks, CardinalAxes[rotationIndex])
     rotationIndex = false
     rotateFrame = 0
   }
@@ -31,9 +31,9 @@ function onKeyDown(e: KeyboardEvent) {
 
 const isGameKey = (key: string): key is GameKey => gameKeys.includes(key as GameKey)
 type GameKey = typeof gameKeys[number]
+// Key list matches order of CardinalAxes
 const gameKeys = ['KeyS', 'KeyW', 'KeyA', 'KeyD', 'KeyQ', 'KeyE'] as const
-const rotationAxes: Vector3[] = [PitchUp, PitchDown, YawLeft, YawRight, RollLeft, RollRight]
-const rotationQuaternions = rotationAxes.map((axis) =>
+const rotationQuaternions = CardinalAxes.map((axis) =>
   new Quaternion().setFromAxisAngle(axis, Math.PI / 2)
 )
 
