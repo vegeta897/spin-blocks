@@ -4,8 +4,12 @@ import { CardinalAxes } from './util'
 
 let rotationIndex: false | number = false
 
+let controlsLocked = false
+export const lockControls = () => (controlsLocked = true)
+export const unlockControls = () => (controlsLocked = false)
+
 let rotateFrame = 0
-const rotateFrames = 12
+const rotateFrames = 10
 export function animateClump(clump: Clump) {
   if (rotationIndex === false) return
   rotateFrame++
@@ -18,14 +22,16 @@ export function animateClump(clump: Clump) {
     rotateBlocks(clump.blocks, CardinalAxes[rotationIndex])
     rotationIndex = false
     rotateFrame = 0
+    controlsLocked = false
   }
 }
 
 function onKeyDown(e: KeyboardEvent) {
-  if (rotationIndex) return
+  if (controlsLocked) return
   if (e.repeat) return
   if (!isGameKey(e.code)) return
   e.preventDefault()
+  controlsLocked = true
   rotationIndex = gameKeys.indexOf(e.code)
 }
 

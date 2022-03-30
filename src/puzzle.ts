@@ -118,8 +118,9 @@ export interface Wall {
   holeBlocks: Object3D[]
 }
 
-const wallMaterial = new MeshPhongMaterial({ color: '#d22573' })
+const wallMaterial = new MeshPhongMaterial({ color: '#d22573', transparent: true })
 export function createWall(blocks: Mesh[]): Wall {
+  wallMaterial.opacity = 1
   const wall: Wall = {
     mesh: new Mesh(new BoxGeometry(WALL_SIZE, WALL_SIZE, 1), wallMaterial),
     holeBlocks: [],
