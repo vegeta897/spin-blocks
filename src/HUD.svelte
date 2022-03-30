@@ -3,6 +3,7 @@
 </script>
 
 <div id="HUD">
+  <!--  <h2>spinblocks</h2>-->
   <h2>{$blockCount}<small>block{$blockCount > 1 ? 's' : ''}</small></h2>
 </div>
 
@@ -17,6 +18,9 @@
   }
   h2 {
     color: #c8ff00;
+    text-shadow: 2px 2px 5px #491630a0;
+    /*text-shadow: 4px 4px 10px #491630d0;*/
+    /*font-size: 10em;*/
     text-transform: uppercase;
     font-size: 5em;
     font-weight: 100;
