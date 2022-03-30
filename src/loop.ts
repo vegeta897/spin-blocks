@@ -12,25 +12,42 @@ import { blockCount } from './store'
 import type { MeshLambertMaterial } from 'three'
 import { lockControls, unlockControls } from './control'
 
+let turboMode = false
+
+export function turbo() {
+  turboMode = true
+}
+
+const DEFAULT_WALL_SPEED = 0.15
+const MAX_WALL_SPEED = 5
+let wallSpeed = DEFAULT_WALL_SPEED
+
 export function update(puzzle: Puzzle) {
   const { wall, clump } = puzzle
-  const previousWallZ = wall.mesh.position.z
-  wall.mesh.position.z += 0.15
-  for (let checkZ = -CLUMP_RADIUS; checkZ <= CLUMP_RADIUS; checkZ++) {
-    if (previousWallZ < checkZ - 1 && wall.mesh.position.z >= checkZ - 1) {
-      const invalidBlocks = getInvalidBlocks(clump, wall, checkZ)
-      if (invalidBlocks.length > 0) {
-        removeBlocks(clump, invalidBlocks)
-        blockCount.update((count) => clump.blocks.length)
+  if (turboMode) wallSpeed = Math.min(MAX_WALL_SPEED, (wallSpeed += 0.1))
+  const nextWallZ = wall.mesh.position.z + wallSpeed
+  while (wall.mesh.position.z < nextWallZ) {
+    const previousWallZ = wall.mesh.position.z
+    wall.mesh.position.z = Math.min(nextWallZ, wall.mesh.position.z + 1)
+    for (let checkZ = -CLUMP_RADIUS; checkZ <= CLUMP_RADIUS; checkZ++) {
+      if (previousWallZ < checkZ - 1 && wall.mesh.position.z >= checkZ - 1) {
+        const invalidBlocks = getInvalidBlocks(clump, wall, checkZ)
+        if (invalidBlocks.length > 0) {
+          removeBlocks(clump, invalidBlocks)
+          blockCount.update((count) => clump.blocks.length)
+        }
+        break
       }
-      break
     }
   }
-  if (wall.mesh.position.z > -CLUMP_RADIUS - 1.2) {
+  if (wall.mesh.position.z > -CLUMP_RADIUS - 8 * wallSpeed) {
     lockControls()
   }
-  if (wall.mesh.position.z > 0) {
-    const fadeProgress = Math.min(1, wall.mesh.position.z / (CLUMP_RADIUS + 2))
+  if (wall.mesh.position.z > -(wallSpeed ** 2)) {
+    const fadeProgress = Math.min(
+      1,
+      (wall.mesh.position.z + wallSpeed ** 2) / (CLUMP_RADIUS + 2 + wallSpeed ** 2)
+    )
     ;(<MeshLambertMaterial>wall.mesh.material).opacity = 1 - fadeProgress
   }
   if (wall.mesh.position.z > CLUMP_RADIUS + 2) {
@@ -45,5 +62,7 @@ export function update(puzzle: Puzzle) {
     puzzle.wall.mesh.position.z = -50
     puzzle.scene.add(puzzle.wall.mesh)
     unlockControls()
+    turboMode = false
+    wallSpeed = DEFAULT_WALL_SPEED
   }
 }

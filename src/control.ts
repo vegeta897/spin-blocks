@@ -2,6 +2,7 @@ import { Quaternion } from 'three'
 import { Clump, rotateBlocks } from './puzzle'
 import { CardinalAxes } from './util'
 import { cubicOut } from '@gamestdio/easing'
+import { turbo } from './loop'
 
 let rotationIndex: false | number = false
 
@@ -38,13 +39,17 @@ function onKeyDown(e: KeyboardEvent) {
   if (!isGameKey(e.code)) return
   e.preventDefault()
   controlsLocked = true
-  rotationIndex = gameKeys.indexOf(e.code)
+  if (e.code === 'Space') {
+    turbo()
+  } else {
+    rotationIndex = gameKeys.indexOf(e.code)
+  }
 }
 
 const isGameKey = (key: string): key is GameKey => gameKeys.includes(key as GameKey)
 type GameKey = typeof gameKeys[number]
 // Key list matches order of CardinalAxes
-const gameKeys = ['KeyS', 'KeyW', 'KeyA', 'KeyD', 'KeyQ', 'KeyE'] as const
+const gameKeys = ['KeyS', 'KeyW', 'KeyA', 'KeyD', 'KeyQ', 'KeyE', 'Space'] as const
 const rotationQuaternions = CardinalAxes.map((axis) =>
   new Quaternion().setFromAxisAngle(axis, Math.PI / 2)
 )
