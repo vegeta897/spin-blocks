@@ -12,11 +12,11 @@ import { createPuzzle, WALL_SIZE } from './puzzle'
 import { initControls, animateClump, stopControls } from './control'
 import { initCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
+import { gameState } from './store'
+import { get } from 'svelte/store'
 
 const TICK_RATE = 60
 const TICK_TIME = 1000 / TICK_RATE
-
-let gameState: undefined | 'running' | 'stopped'
 
 const scene = new Scene()
 scene.background = new Color('#330f1f')
@@ -45,10 +45,13 @@ scene.add(gridLeftRight)
 
 const puzzle = createPuzzle(scene)
 
+let _gameState = get(gameState)
+gameState.subscribe((gs) => (_gameState = gs))
+
 let lag: number
 let lastUpdate: number
 function animate() {
-  if (gameState === 'stopped') return
+  if (_gameState === 'stopped') return
   const now = performance.now()
   let delta = now - lastUpdate
   if (delta > 1000) delta = 1000
@@ -71,22 +74,27 @@ function resize() {
 }
 
 export const initGame = (canvas: HTMLCanvasElement) => {
+  gameState.set('initialized')
   renderer = new WebGLRenderer({ antialias: true, canvas })
   renderer.setPixelRatio(window.devicePixelRatio)
   resize()
-  if (!gameState) {
-    lag = 0
-    lastUpdate = performance.now()
-    animate()
-    initCamera()
-    initControls()
-    window.addEventListener('resize', resize)
-    gameState = 'running'
-  }
+  updateCamera(camera)
+  renderer.render(scene, camera)
+}
+
+export const startGame = () => {
+  if (_gameState === 'running') return
+  gameState.set('running')
+  lag = 0
+  lastUpdate = performance.now()
+  animate()
+  initCamera()
+  initControls()
+  window.addEventListener('resize', resize)
 }
 
 export const stopGame = () => {
-  gameState = 'stopped'
+  gameState.set('stopped')
   renderer.dispose()
   stopCamera()
   stopControls()
