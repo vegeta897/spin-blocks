@@ -28,23 +28,6 @@ export interface Clump {
   blocks: Mesh[]
 }
 
-const colors = [
-  '#fcba15',
-  '#e5fc15',
-  '#94fc15',
-  '#15fc43',
-  '#07ecd9',
-  '#3290ff',
-  '#3c46ff',
-  '#6d3cff',
-  '#7e26ff',
-  '#ab06ff',
-  '#ff06f3',
-  '#ff0089',
-  '#ff0000',
-]
-let color = 0
-
 export function createPuzzle(scene: Scene): Puzzle {
   const clump = createClump()
   const wall = createWall(clump.blocks)
@@ -90,6 +73,23 @@ export function getNextBlockPosition(clump: Clump): Vector3 {
   return pickRandom(neighbors)
 }
 
+const colors = [
+  '#fcba15',
+  '#e5fc15',
+  '#94fc15',
+  '#15fc43',
+  '#07ecd9',
+  '#3290ff',
+  '#3c46ff',
+  '#6d3cff',
+  '#7e26ff',
+  '#ab06ff',
+  '#ff06f3',
+  '#ff0089',
+  '#ff0000',
+]
+let color = 0
+
 export function addBlockToClump(clump: Clump, position: Vector3) {
   const newBlock = new Mesh(
     new BoxGeometry(),
@@ -133,8 +133,8 @@ export function createWall(blocks: Mesh[]): Wall {
       wall.holeBlocks.push(flatBlock)
     }
   }
-  const wallGrid = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#b02564')
-  wallGrid.position.z = 0.5
+  const wallGrid = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#5b1b38')
+  wallGrid.position.z = -0.5
   wallGrid.rotateX(Math.PI / 2)
   wall.mesh.add(wallGrid)
   return wall

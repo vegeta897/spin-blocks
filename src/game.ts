@@ -32,7 +32,7 @@ scene.add(directionalLight)
 scene.add(directionalLight.target)
 
 const gridTopBottom = new Object3D()
-const gridBottom = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#aa0074')
+const gridBottom = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#981e56')
 gridBottom.position.y = -WALL_SIZE / 2
 gridTopBottom.add(gridBottom)
 const gridTop = gridBottom.clone()
