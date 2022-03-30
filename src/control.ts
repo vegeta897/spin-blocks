@@ -1,5 +1,6 @@
 import { Quaternion, Vector3 } from 'three'
 import { Clump, rotateBlocks } from './puzzle'
+import { PitchDown, PitchUp, RollLeft, RollRight, YawLeft, YawRight } from './util'
 
 let rotationIndex: false | number = false
 
@@ -14,7 +15,7 @@ export function animateClump(clump: Clump) {
   )
   if (rotateFrame === rotateFrames) {
     clump.container.rotation.set(0, 0, 0)
-    rotateBlocks(clump.blocks, ...rotations[rotationIndex])
+    rotateBlocks(clump.blocks, rotationAxes[rotationIndex])
     rotationIndex = false
     rotateFrame = 0
   }
@@ -31,16 +32,9 @@ function onKeyDown(e: KeyboardEvent) {
 const isGameKey = (key: string): key is GameKey => gameKeys.includes(key as GameKey)
 type GameKey = typeof gameKeys[number]
 const gameKeys = ['KeyS', 'KeyW', 'KeyA', 'KeyD', 'KeyQ', 'KeyE'] as const
-const rotations: [Vector3, number][] = [
-  [new Vector3(1, 0, 0), Math.PI / 2],
-  [new Vector3(1, 0, 0), -Math.PI / 2],
-  [new Vector3(0, 1, 0), Math.PI / 2],
-  [new Vector3(0, 1, 0), -Math.PI / 2],
-  [new Vector3(0, 0, 1), Math.PI / 2],
-  [new Vector3(0, 0, 1), -Math.PI / 2],
-]
-const rotationQuaternions = rotations.map(([axis, angle]) =>
-  new Quaternion().setFromAxisAngle(axis, angle)
+const rotationAxes: Vector3[] = [PitchUp, PitchDown, YawLeft, YawRight, RollLeft, RollRight]
+const rotationQuaternions = rotationAxes.map((axis) =>
+  new Quaternion().setFromAxisAngle(axis, Math.PI / 2)
 )
 
 export function initControls() {

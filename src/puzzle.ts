@@ -82,9 +82,9 @@ export function createWall(flatBlocks: Mesh[]): Mesh {
   return wall
 }
 
-export function rotateBlocks(puzzleBlocks: Object3D[], axis: Vector3, angle: number) {
+export function rotateBlocks(puzzleBlocks: Object3D[], axis: Vector3) {
   puzzleBlocks.forEach((block) => {
-    block.position.applyAxisAngle(axis, angle)
+    block.position.applyAxisAngle(axis, Math.PI / 2)
     block.position.round()
   })
 }

@@ -16,7 +16,6 @@ export function update(wall: Object3D, clump: Clump) {
     }
   }
   if (wall.position.z >= CLUMP_RADIUS) {
-    console.log('wall reset')
     wall.position.z = -50
   }
 }
