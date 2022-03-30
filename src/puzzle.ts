@@ -1,20 +1,28 @@
-import { BoxGeometry, Mesh, MeshPhongMaterial, Object3D, Vector3 } from 'three'
+import { BoxGeometry, Mesh, MeshPhongMaterial, Object3D, Scene, Vector3 } from 'three'
 import { CSG } from 'three-csg-ts'
-import { CardinalAxes, get6Neighbors, pickRandom, randomInt } from './util'
+import {
+  CardinalAxes,
+  get6Neighbors,
+  pickRandom,
+  randomInt,
+  stringToVec3,
+  vec3ToString,
+} from './util'
 import { get } from 'svelte/store'
 import { blockCount } from './store'
 
 const CLUMP_DIAMETER = 7
 export const CLUMP_RADIUS = Math.floor(CLUMP_DIAMETER / 2)
 
-const vec3ToString = (vec3: Vector3): string => vec3.toArray().join(':')
-const stringToVec3 = (str: string): Vector3 =>
-  new Vector3().fromArray(str.split(':').map((c) => +c))
+export interface Puzzle {
+  clump: Clump
+  wall: Wall
+  scene: Scene
+}
 
 export interface Clump {
   container: Object3D
   blocks: Mesh[]
-  flatBlocks: Mesh[]
 }
 
 const colors = [
@@ -33,11 +41,24 @@ const colors = [
   '#ff0000',
 ]
 
+export function createPuzzle(scene: Scene): Puzzle {
+  const clump = createClump()
+  const wall = createWall(clump.blocks)
+  wall.mesh.position.z = -50
+  randomizeRotation(clump.blocks)
+  scene.add(wall.mesh)
+  scene.add(clump.container)
+  return {
+    clump,
+    wall,
+    scene,
+  }
+}
+
 export function createClump(): Clump {
   const clump: Clump = {
     container: new Object3D(),
     blocks: [],
-    flatBlocks: [],
   }
   const puzzleBlockCoords: Set<string> = new Set()
   const nextBlocks: Set<string> = new Set([vec3ToString(new Vector3())])
@@ -53,12 +74,6 @@ export function createClump(): Clump {
     )
     block.position.copy(blockVector)
     block.updateMatrix()
-    if (!clump.flatBlocks.some((fb) => xyIsEqual(fb.position, block.position))) {
-      const flatBlock = block.clone()
-      flatBlock.position.z = 0
-      flatBlock.updateMatrix()
-      clump.flatBlocks.push(flatBlock)
-    }
     clump.container.attach(block)
     clump.blocks.push(block)
     get6Neighbors(blockVector).forEach((neighborVector) => {
@@ -82,13 +97,28 @@ export function randomizeRotation(blocks: Object3D[]) {
     }
   })
   // TODO: Ensure final result does not equal initial state
+  // And ensure final result won't fit in hole of initial state
 }
 
-export function createWall(flatBlocks: Mesh[]): Mesh {
-  const wallMaterial = new MeshPhongMaterial({ color: '#d22573' })
-  let wall: Mesh = new Mesh(new BoxGeometry(9, 9, 1), wallMaterial)
-  for (const flatBlock of flatBlocks) {
-    wall = CSG.subtract(wall, flatBlock)
+export interface Wall {
+  mesh: Mesh
+  holeBlocks: Object3D[]
+}
+
+const wallMaterial = new MeshPhongMaterial({ color: '#d22573' })
+export function createWall(blocks: Mesh[]): Wall {
+  const wall: Wall = {
+    mesh: new Mesh(new BoxGeometry(9, 9, 1), wallMaterial),
+    holeBlocks: [],
+  }
+  for (const block of blocks) {
+    const flatBlock = block.clone()
+    flatBlock.position.z = 0
+    flatBlock.updateMatrix()
+    wall.mesh = CSG.subtract(wall.mesh, flatBlock)
+    if (!wall.holeBlocks.some((hb) => xyIsEqual(hb.position, flatBlock.position))) {
+      wall.holeBlocks.push(flatBlock)
+    }
   }
   return wall
 }
@@ -100,16 +130,19 @@ export function rotateBlocks(blocks: Object3D[], axis: Vector3) {
   })
 }
 
-export function getInvalidBlocks(clump: Clump, z: number): Object3D[] {
+export function getInvalidBlocks(clump: Clump, wall: Wall, z: number): Mesh[] {
   return clump.blocks.filter(
     (clumpBlock) =>
       clumpBlock.position.z === z &&
-      !clump.flatBlocks.some((flatBlock) => xyIsEqual(flatBlock.position, clumpBlock.position))
+      !wall.holeBlocks.some((hb) => xyIsEqual(hb.position, clumpBlock.position))
   )
 }
 
-export function removeBlocks(clump: Clump, removeBlocks: Object3D[]) {
-  removeBlocks.forEach((b) => b.removeFromParent())
+export function removeBlocks(clump: Clump, removeBlocks: Mesh[]) {
+  removeBlocks.forEach((b) => {
+    b.removeFromParent()
+    b.geometry.dispose()
+  })
   clump.blocks = <Mesh[]>[...clump.container.children]
 }
 

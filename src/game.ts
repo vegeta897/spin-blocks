@@ -7,7 +7,7 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three'
-import { createWall, createClump, randomizeRotation } from './puzzle'
+import { createPuzzle } from './puzzle'
 import { initControls, animateClump, stopControls } from './control'
 import { initCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
@@ -25,17 +25,6 @@ scene.background = new Color('#330f1f')
 const camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
 let renderer: WebGLRenderer
 
-const axesHelper = new AxesHelper(3)
-axesHelper.position.set(0, -4.5, -10)
-scene.add(axesHelper)
-
-const clump = createClump()
-randomizeRotation(clump.blocks)
-const wall = createWall(clump.flatBlocks)
-wall.position.z = -50
-scene.add(wall)
-scene.add(clump.container)
-
 const ambientLight = new AmbientLight('#6b566b', 1)
 scene.add(ambientLight)
 const directionalLight = new DirectionalLight(0xffffff, 1)
@@ -43,6 +32,12 @@ directionalLight.position.set(20, 30, 0)
 directionalLight.target.position.set(0, 0, -50)
 scene.add(directionalLight)
 scene.add(directionalLight.target)
+
+const axesHelper = new AxesHelper(3)
+axesHelper.position.set(0, -4.5, -10)
+scene.add(axesHelper)
+
+const puzzle = createPuzzle(scene)
 
 let lag: number
 let lastUpdate: number
@@ -53,8 +48,8 @@ function animate() {
   if (delta > 1000) delta = 1000
   lag += delta
   while (lag >= TICK_TIME) {
-    update(wall, clump)
-    animateClump(clump)
+    update(puzzle)
+    animateClump(puzzle.clump)
     lag -= TICK_TIME
   }
   lastUpdate = now

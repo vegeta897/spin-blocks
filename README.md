@@ -6,3 +6,4 @@ An experiment inspired by SuperHyperCube
 
 - Add 1 block to clump for every success
 - Spacebar to insta-drop
+- Extra points for fitting clump with extra space

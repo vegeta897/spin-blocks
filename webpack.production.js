@@ -86,7 +86,10 @@ module.exports = (env) => {
       }),
       new SvelteCheckPlugin(),
       new webpack.ProgressPlugin(),
-      new BundleAnalyzerPlugin(),
+      new BundleAnalyzerPlugin({
+        analyzerMode: 'static',
+        reportFilename: './../bundle-report.html',
+      }),
       new ZipPlugin({
         filename: 'app.zip',
         exclude: [/\.js.map$/],
