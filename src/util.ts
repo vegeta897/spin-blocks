@@ -21,6 +21,6 @@ export function get6Neighbors(origin = new Vector3()): Vector3[] {
   return CardinalAxes.map((dir) => origin.clone().add(dir))
 }
 
-export const vec3ToString = (vec3: Vector3): string => vec3.toArray().join(':')
-export const stringToVec3 = (str: string): Vector3 =>
-  new Vector3().fromArray(str.split(':').map((c) => +c))
+export function xyIsEqual(v1: Vector3, v2: Vector3) {
+  return v1.x === v2.x && v1.y === v2.y
+}

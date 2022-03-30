@@ -1,22 +1,20 @@
 import {
   AmbientLight,
-  AxesHelper,
   Color,
   DirectionalLight,
+  GridHelper,
+  Object3D,
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
 } from 'three'
-import { createPuzzle } from './puzzle'
+import { createPuzzle, WALL_SIZE } from './puzzle'
 import { initControls, animateClump, stopControls } from './control'
 import { initCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
 
 const TICK_RATE = 60
 const TICK_TIME = 1000 / TICK_RATE
-
-const gameInstance = Math.floor(Math.random() * 100000)
-console.log(`game.ts init ${gameInstance}`)
 
 let gameState: undefined | 'running' | 'stopped'
 
@@ -33,9 +31,17 @@ directionalLight.target.position.set(0, 0, -50)
 scene.add(directionalLight)
 scene.add(directionalLight.target)
 
-const axesHelper = new AxesHelper(3)
-axesHelper.position.set(0, -4.5, -10)
-scene.add(axesHelper)
+const gridTopBottom = new Object3D()
+const gridBottom = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#aa0074')
+gridBottom.position.y = -WALL_SIZE / 2
+gridTopBottom.add(gridBottom)
+const gridTop = gridBottom.clone()
+gridTop.position.y = WALL_SIZE / 2
+gridTopBottom.add(gridTop)
+const gridLeftRight = gridTopBottom.clone()
+gridLeftRight.rotateZ(Math.PI / 2)
+scene.add(gridTopBottom)
+scene.add(gridLeftRight)
 
 const puzzle = createPuzzle(scene)
 

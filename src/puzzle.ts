@@ -1,17 +1,20 @@
-import { BoxGeometry, Mesh, MeshPhongMaterial, Object3D, Scene, Vector3 } from 'three'
-import { CSG } from 'three-csg-ts'
 import {
-  CardinalAxes,
-  get6Neighbors,
-  pickRandom,
-  randomInt,
-  stringToVec3,
-  vec3ToString,
-} from './util'
+  Box3,
+  BoxGeometry,
+  GridHelper,
+  Mesh,
+  MeshPhongMaterial,
+  Object3D,
+  Scene,
+  Vector3,
+} from 'three'
+import { CSG } from 'three-csg-ts'
+import { CardinalAxes, get6Neighbors, pickRandom, randomInt, xyIsEqual } from './util'
 import { get } from 'svelte/store'
 import { blockCount } from './store'
 
 const CLUMP_DIAMETER = 7
+export const WALL_SIZE = CLUMP_DIAMETER + 2
 export const CLUMP_RADIUS = Math.floor(CLUMP_DIAMETER / 2)
 
 export interface Puzzle {
@@ -40,6 +43,7 @@ const colors = [
   '#ff0089',
   '#ff0000',
 ]
+let color = 0
 
 export function createPuzzle(scene: Scene): Puzzle {
   const clump = createClump()
@@ -60,32 +64,41 @@ export function createClump(): Clump {
     container: new Object3D(),
     blocks: [],
   }
-  const puzzleBlockCoords: Set<string> = new Set()
-  const nextBlocks: Set<string> = new Set([vec3ToString(new Vector3())])
-  let color = 0
-  while (puzzleBlockCoords.size < get(blockCount) && nextBlocks.size > 0) {
-    const nextBlock = pickRandom([...nextBlocks])
-    nextBlocks.delete(nextBlock)
-    puzzleBlockCoords.add(nextBlock)
-    const blockVector = stringToVec3(nextBlock)
-    const block = new Mesh(
-      new BoxGeometry(),
-      new MeshPhongMaterial({ color: colors[color++ % colors.length] })
-    )
-    block.position.copy(blockVector)
-    block.updateMatrix()
-    clump.container.attach(block)
-    clump.blocks.push(block)
-    get6Neighbors(blockVector).forEach((neighborVector) => {
-      const neighborCoord = vec3ToString(neighborVector)
-      if (neighborVector.length() > CLUMP_RADIUS) return
-      if (puzzleBlockCoords.has(neighborCoord)) return
-      nextBlocks.add(neighborCoord)
-    })
+  addBlockToClump(clump, new Vector3())
+  while (clump.blocks.length < get(blockCount)) {
+    addBlockToClump(clump, getNextBlockPosition(clump))
   }
-  clump.container.position.set(0, 0, 0)
   // TODO: Center result on 0,0
   return clump
+}
+
+const clumpBoundingBox = new Box3(
+  new Vector3(-CLUMP_RADIUS, -CLUMP_RADIUS, -CLUMP_RADIUS),
+  new Vector3(CLUMP_RADIUS, CLUMP_RADIUS, CLUMP_RADIUS)
+)
+
+export function getNextBlockPosition(clump: Clump): Vector3 {
+  const neighbors: Vector3[] = []
+  for (const block of clump.blocks) {
+    for (const neighbor of get6Neighbors(block.position)) {
+      if (!clumpBoundingBox.containsPoint(neighbor)) continue
+      if (clump.blocks.some((b) => b.position.equals(neighbor))) continue
+      neighbors.push(neighbor)
+    }
+  }
+  if (neighbors.length === 0) throw 'No eligible neighbors found'
+  return pickRandom(neighbors)
+}
+
+export function addBlockToClump(clump: Clump, position: Vector3) {
+  const newBlock = new Mesh(
+    new BoxGeometry(),
+    new MeshPhongMaterial({ color: colors[color++ % colors.length] })
+  )
+  newBlock.position.copy(position)
+  newBlock.updateMatrix()
+  clump.container.attach(newBlock)
+  clump.blocks.push(newBlock)
 }
 
 export function randomizeRotation(blocks: Object3D[]) {
@@ -108,7 +121,7 @@ export interface Wall {
 const wallMaterial = new MeshPhongMaterial({ color: '#d22573' })
 export function createWall(blocks: Mesh[]): Wall {
   const wall: Wall = {
-    mesh: new Mesh(new BoxGeometry(9, 9, 1), wallMaterial),
+    mesh: new Mesh(new BoxGeometry(WALL_SIZE, WALL_SIZE, 1), wallMaterial),
     holeBlocks: [],
   }
   for (const block of blocks) {
@@ -120,6 +133,10 @@ export function createWall(blocks: Mesh[]): Wall {
       wall.holeBlocks.push(flatBlock)
     }
   }
+  const wallGrid = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#b02564')
+  wallGrid.position.z = 0.5
+  wallGrid.rotateX(Math.PI / 2)
+  wall.mesh.add(wallGrid)
   return wall
 }
 
@@ -144,8 +161,4 @@ export function removeBlocks(clump: Clump, removeBlocks: Mesh[]) {
     b.geometry.dispose()
   })
   clump.blocks = <Mesh[]>[...clump.container.children]
-}
-
-function xyIsEqual(v1: Vector3, v2: Vector3) {
-  return v1.x === v2.x && v1.y === v2.y
 }

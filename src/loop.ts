@@ -1,7 +1,9 @@
 import {
+  addBlockToClump,
   CLUMP_RADIUS,
   createWall,
   getInvalidBlocks,
+  getNextBlockPosition,
   Puzzle,
   randomizeRotation,
   removeBlocks,
@@ -22,12 +24,14 @@ export function update(puzzle: Puzzle) {
       break
     }
   }
-  if (wall.mesh.position.z >= CLUMP_RADIUS) {
+  if (wall.mesh.position.z > CLUMP_RADIUS) {
+    addBlockToClump(clump, getNextBlockPosition(clump))
+    blockCount.update((count) => clump.blocks.length)
+    const newRotation = clump.blocks.map((b) => b.clone())
+    randomizeRotation(newRotation)
     const oldWall = wall
     oldWall.mesh.removeFromParent()
     oldWall.mesh.geometry.dispose()
-    const newRotation = clump.blocks.map((b) => b.clone())
-    randomizeRotation(newRotation)
     puzzle.wall = createWall(newRotation)
     puzzle.wall.mesh.position.z = -50
     puzzle.scene.add(puzzle.wall.mesh)
