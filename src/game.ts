@@ -7,7 +7,7 @@ import {
   Scene,
   WebGLRenderer,
 } from 'three'
-import { createPuzzle, createBlocks, createWall, createClump, getFlatBlocks } from './puzzle'
+import { createWall, createClump } from './puzzle'
 import { initControls, renderClump, stopControls } from './control'
 import { initCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
@@ -26,14 +26,11 @@ const axesHelper = new AxesHelper(3)
 axesHelper.position.set(0, -4.5, -10)
 scene.add(axesHelper)
 
-const puzzleBlockCoords = createPuzzle()
-const blocks = createBlocks(puzzleBlockCoords)
-const flatBlocks = getFlatBlocks(blocks)
-const wall = createWall(flatBlocks)
+const clump = createClump()
+const wall = createWall(clump.flatBlocks)
 wall.position.z = -50
-const clump = createClump(blocks)
 scene.add(wall)
-scene.add(clump)
+scene.add(clump.container)
 
 const ambientLight = new AmbientLight('#5d275d', 1)
 scene.add(ambientLight)
@@ -46,7 +43,7 @@ scene.add(directionalLight.target)
 function animate() {
   if (gameState === 'stopped') return
   requestAnimationFrame(animate)
-  update(wall, clump, flatBlocks)
+  update(wall, clump)
   renderClump(clump)
   updateCamera(camera)
   renderer.render(scene, camera)

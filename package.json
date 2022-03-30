@@ -23,8 +23,8 @@
     "lint-check": "npx eslint ./src/**/*.ts",
     "code-style-check": "npm run lint-check && npm run prettier:check",
     "serve": "npx sirv-cli dist --port 8081",
-    "publish": "butler push dist/app.zip vegeta897/spin-blocks:html5",
-    "status": "butler status vegeta897/spin-blocks:html5"
+    "publish": "butler push dist/app.zip vegeta897/spinblocks:html5",
+    "status": "butler status vegeta897/spinblocks:html5"
   },
   "dependencies": {
     "@gamestdio/easing": "^1.0.0",

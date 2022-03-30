@@ -1,17 +1,20 @@
-import { Object3D, Quaternion, Vector3 } from 'three'
-import { rotateBlocks } from './puzzle'
+import { Quaternion, Vector3 } from 'three'
+import { Clump, rotateBlocks } from './puzzle'
 
 let rotationIndex: false | number = false
 
 let rotateFrame = 0
 const rotateFrames = 12
-export function renderClump(clump: Object3D) {
+export function renderClump(clump: Clump) {
   if (rotationIndex === false) return
   rotateFrame++
-  clump.quaternion.rotateTowards(rotationQuaternions[rotationIndex], Math.PI / 2 / rotateFrames)
+  clump.container.quaternion.rotateTowards(
+    rotationQuaternions[rotationIndex],
+    Math.PI / 2 / rotateFrames
+  )
   if (rotateFrame === rotateFrames) {
-    clump.rotation.set(0, 0, 0)
-    rotateBlocks(clump.children, ...rotations[rotationIndex])
+    clump.container.rotation.set(0, 0, 0)
+    rotateBlocks(clump.blocks, ...rotations[rotationIndex])
     rotationIndex = false
     rotateFrame = 0
   }
