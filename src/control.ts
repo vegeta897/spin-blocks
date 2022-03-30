@@ -1,6 +1,7 @@
 import { Quaternion } from 'three'
 import { Clump, rotateBlocks } from './puzzle'
 import { CardinalAxes } from './util'
+import { cubicOut } from '@gamestdio/easing'
 
 let rotationIndex: false | number = false
 
@@ -10,13 +11,18 @@ export const unlockControls = () => (controlsLocked = false)
 
 let rotateFrame = 0
 const rotateFrames = 10
+const easedSteps: number[] = []
+for (let i = 1; i <= rotateFrames; i++) {
+  const easedDelta = cubicOut(i / rotateFrames) - cubicOut((i - 1) / rotateFrames)
+  easedSteps.push((Math.PI / 2) * easedDelta)
+}
 export function animateClump(clump: Clump) {
   if (rotationIndex === false) return
-  rotateFrame++
   clump.container.quaternion.rotateTowards(
     rotationQuaternions[rotationIndex],
-    Math.PI / 2 / rotateFrames
+    easedSteps[rotateFrame]
   )
+  rotateFrame++
   if (rotateFrame === rotateFrames) {
     clump.container.rotation.set(0, 0, 0)
     rotateBlocks(clump.blocks, CardinalAxes[rotationIndex])

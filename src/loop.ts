@@ -26,7 +26,7 @@ export function update(puzzle: Puzzle) {
       break
     }
   }
-  if (wall.mesh.position.z > -CLUMP_RADIUS - 1.5) {
+  if (wall.mesh.position.z > -CLUMP_RADIUS - 1.2) {
     lockControls()
   }
   if (wall.mesh.position.z > 0) {
