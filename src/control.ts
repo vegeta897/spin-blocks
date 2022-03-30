@@ -5,7 +5,7 @@ let rotationIndex: false | number = false
 
 let rotateFrame = 0
 const rotateFrames = 12
-export function renderClump(clump: Clump) {
+export function animateClump(clump: Clump) {
   if (rotationIndex === false) return
   rotateFrame++
   clump.container.quaternion.rotateTowards(

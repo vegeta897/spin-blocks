@@ -8,9 +8,12 @@ import {
   WebGLRenderer,
 } from 'three'
 import { createWall, createClump } from './puzzle'
-import { initControls, renderClump, stopControls } from './control'
+import { initControls, animateClump, stopControls } from './control'
 import { initCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
+
+const TICK_RATE = 60
+const TICK_TIME = 1000 / TICK_RATE
 
 const gameInstance = Math.floor(Math.random() * 100000)
 console.log(`game.ts init ${gameInstance}`)
@@ -32,7 +35,7 @@ wall.position.z = -50
 scene.add(wall)
 scene.add(clump.container)
 
-const ambientLight = new AmbientLight('#5d275d', 1)
+const ambientLight = new AmbientLight('#6b566b', 1)
 scene.add(ambientLight)
 const directionalLight = new DirectionalLight(0xffffff, 1)
 directionalLight.position.set(20, 30, 0)
@@ -40,11 +43,21 @@ directionalLight.target.position.set(0, 0, -50)
 scene.add(directionalLight)
 scene.add(directionalLight.target)
 
+let lag: number
+let lastUpdate: number
 function animate() {
   if (gameState === 'stopped') return
+  const now = performance.now()
+  let delta = now - lastUpdate
+  if (delta > 1000) delta = 1000
+  lag += delta
+  while (lag >= TICK_TIME) {
+    update(wall, clump)
+    animateClump(clump)
+    lag -= TICK_TIME
+  }
+  lastUpdate = now
   requestAnimationFrame(animate)
-  update(wall, clump)
-  renderClump(clump)
   updateCamera(camera)
   renderer.render(scene, camera)
 }
@@ -60,6 +73,8 @@ export const initGame = (canvas: HTMLCanvasElement) => {
   renderer.setPixelRatio(window.devicePixelRatio)
   resize()
   if (!gameState) {
+    lag = 0
+    lastUpdate = performance.now()
     animate()
     initCamera()
     initControls()

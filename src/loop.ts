@@ -1,14 +1,22 @@
 import type { Object3D } from 'three'
-import { Clump, getInvalidBlocks } from './puzzle'
+import { Clump, CLUMP_RADIUS, getInvalidBlocks, removeBlocks } from './puzzle'
 import { blockCount } from './store'
 
 export function update(wall: Object3D, clump: Clump) {
+  const previousWallZ = wall.position.z
   wall.position.z += 0.15
-  if (wall.position.z >= 3) {
+  for (let checkZ = -CLUMP_RADIUS; checkZ <= CLUMP_RADIUS; checkZ++) {
+    if (previousWallZ < checkZ - 1 && wall.position.z >= checkZ - 1) {
+      const invalidBlocks = getInvalidBlocks(clump, checkZ)
+      if (invalidBlocks.length > 0) {
+        removeBlocks(clump, invalidBlocks)
+        blockCount.update((count) => clump.blocks.length)
+      }
+      break
+    }
+  }
+  if (wall.position.z >= CLUMP_RADIUS) {
     console.log('wall reset')
     wall.position.z = -50
-    const invalidBlocks = getInvalidBlocks(clump)
-    invalidBlocks.forEach((b) => b.removeFromParent())
-    blockCount.update((count) => clump.blocks.length)
   }
 }

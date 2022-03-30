@@ -4,8 +4,8 @@ import { get6Neighbors, pickRandom } from './util'
 import { get } from 'svelte/store'
 import { blockCount } from './store'
 
-const SIZE = 7
-const HALF = Math.floor(SIZE / 2)
+const CLUMP_DIAMETER = 7
+export const CLUMP_RADIUS = Math.floor(CLUMP_DIAMETER / 2)
 
 const vec3ToString = (vec3: Vector3): string => vec3.toArray().join(':')
 const stringToVec3 = (str: string): Vector3 =>
@@ -17,7 +17,21 @@ export interface Clump {
   flatBlocks: Mesh[]
 }
 
-const colors = ['#fcba15', '#e5fc15', '#94fc15', '#15fc43', '#15fce9', '#1581fc']
+const colors = [
+  '#fcba15',
+  '#e5fc15',
+  '#94fc15',
+  '#15fc43',
+  '#07ecd9',
+  '#3290ff',
+  '#3c46ff',
+  '#6d3cff',
+  '#7e26ff',
+  '#ab06ff',
+  '#ff06f3',
+  '#ff0089',
+  '#ff0000',
+]
 
 export function createClump(): Clump {
   const clump: Clump = {
@@ -48,7 +62,10 @@ export function createClump(): Clump {
     clump.container.attach(block)
     clump.blocks.push(block)
     get6Neighbors(blockVector).forEach((neighborVector) => {
-      if (neighborVector.length() <= HALF) nextBlocks.add(vec3ToString(neighborVector))
+      const neighborCoord = vec3ToString(neighborVector)
+      if (neighborVector.length() > CLUMP_RADIUS) return
+      if (puzzleBlockCoords.has(neighborCoord)) return
+      nextBlocks.add(neighborCoord)
     })
   }
   clump.container.position.set(0, 0, 0)
@@ -72,11 +89,17 @@ export function rotateBlocks(puzzleBlocks: Object3D[], axis: Vector3, angle: num
   })
 }
 
-export function getInvalidBlocks(clump: Clump): Object3D[] {
+export function getInvalidBlocks(clump: Clump, z: number): Object3D[] {
   return clump.blocks.filter(
     (clumpBlock) =>
+      clumpBlock.position.z === z &&
       !clump.flatBlocks.some((flatBlock) => xyIsEqual(flatBlock.position, clumpBlock.position))
   )
+}
+
+export function removeBlocks(clump: Clump, removeBlocks: Object3D[]) {
+  removeBlocks.forEach((b) => b.removeFromParent())
+  clump.blocks = <Mesh[]>[...clump.container.children]
 }
 
 function xyIsEqual(v1: Vector3, v2: Vector3) {
