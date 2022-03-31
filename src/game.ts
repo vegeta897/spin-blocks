@@ -17,31 +17,28 @@ import { get } from 'svelte/store'
 import { Ticker } from './util'
 
 const TICK_RATE = 60
+const FOV = 85
 
 const scene = new Scene()
 scene.background = new Color('#330f1f')
-const camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
+const camera = new PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.1, 100)
 let renderer: WebGLRenderer
 
 const ambientLight = new AmbientLight('#6b566b', 1)
-scene.add(ambientLight)
 const directionalLight = new DirectionalLight(0xffffff, 1)
 directionalLight.position.set(20, 30, 0)
 directionalLight.target.position.set(0, 0, -50)
-scene.add(directionalLight)
-scene.add(directionalLight.target)
+scene.add(ambientLight, directionalLight, directionalLight.target)
 
 const gridTopBottom = new Object3D()
 const gridBottom = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#981e56')
 gridBottom.position.y = -WALL_SIZE / 2
-gridTopBottom.add(gridBottom)
 const gridTop = gridBottom.clone()
 gridTop.position.y = WALL_SIZE / 2
-gridTopBottom.add(gridTop)
+gridTopBottom.add(gridBottom, gridTop)
 const gridLeftRight = gridTopBottom.clone()
 gridLeftRight.rotateZ(Math.PI / 2)
-scene.add(gridTopBottom)
-scene.add(gridLeftRight)
+scene.add(gridTopBottom, gridLeftRight)
 
 const puzzle = createPuzzle(scene)
 
@@ -65,7 +62,7 @@ export const initGame = (canvas: HTMLCanvasElement) => {
   ticker = new Ticker(
     () => {
       update(puzzle)
-      animateClump(puzzle.clump)
+      animateClump(puzzle)
     },
     () => {
       updateCamera(camera)

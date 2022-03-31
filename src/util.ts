@@ -1,4 +1,4 @@
-import { Object3D, Vector3 } from 'three'
+import { MeshPhongMaterial, Object3D, Vector3 } from 'three'
 
 export function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -67,3 +67,22 @@ export class Ticker {
     requestAnimationFrame(this.tick.bind(this))
   }
 }
+
+const blockMaterials = [
+  '#fcba15',
+  '#e5fc15',
+  '#94fc15',
+  '#15fc43',
+  '#07ecd9',
+  '#3290ff',
+  '#3c46ff',
+  '#6d3cff',
+  '#7e26ff',
+  '#ab06ff',
+  '#ff06f3',
+  '#ff0089',
+  '#ff0000',
+  '#ff5900',
+].map((color) => new MeshPhongMaterial({ color }))
+let color = 0
+export const getBlockMaterial = () => blockMaterials[color++ % blockMaterials.length]

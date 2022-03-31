@@ -6,7 +6,8 @@ import {
   getNextBlockPosition,
   Puzzle,
   randomizeRotation,
-  removeBlocks,
+  removeBlocksFromClump,
+  updateClumpShadows,
 } from './puzzle'
 import { blockCount } from './store'
 import type { MeshLambertMaterial } from 'three'
@@ -33,7 +34,7 @@ export function update(puzzle: Puzzle) {
       if (previousWallZ < checkZ - 1 && wall.mesh.position.z >= checkZ - 1) {
         const invalidBlocks = getInvalidBlocksAtZ(clump.blocks, wall.holeBlocks, checkZ)
         if (invalidBlocks.length > 0) {
-          removeBlocks(clump, invalidBlocks)
+          removeBlocksFromClump(clump, invalidBlocks)
           blockCount.update(() => clump.blocks.length)
         }
         break
@@ -55,6 +56,7 @@ export function update(puzzle: Puzzle) {
     blockCount.update(() => clump.blocks.length)
     const newRotation = clump.blocks.map((b) => b.clone())
     randomizeRotation(newRotation)
+    updateClumpShadows(puzzle)
     const oldWall = wall
     oldWall.mesh.removeFromParent()
     oldWall.mesh.geometry.dispose()

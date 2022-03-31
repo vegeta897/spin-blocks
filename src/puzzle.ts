@@ -3,6 +3,7 @@ import {
   BoxGeometry,
   GridHelper,
   Mesh,
+  MeshBasicMaterial,
   MeshPhongMaterial,
   Object3D,
   Scene,
@@ -12,6 +13,7 @@ import { CSG } from 'three-csg-ts'
 import {
   CardinalAxes,
   get6Neighbors,
+  getBlockMaterial,
   pickRandom,
   randomInt,
   xyEqualInGroup,
@@ -28,6 +30,7 @@ export interface Puzzle {
   clump: Clump
   wall: Wall
   scene: Scene
+  shadow: Object3D
 }
 
 export interface Clump {
@@ -35,22 +38,25 @@ export interface Clump {
   blocks: Mesh[]
 }
 
+// TODO: Change all block data/functions to work with Vector3s instead of Mesh/Object3D, update actual block meshes when needed
+
 export function createPuzzle(scene: Scene): Puzzle {
   const clump = createClump()
   const wall = createWall(clump.blocks)
   wall.mesh.position.z = -50
   randomizeRotation(clump.blocks)
-  scene.add(wall.mesh)
-  scene.add(clump.container)
+  const shadow = getClumpShadows(clump.blocks)
+  scene.add(clump.container, wall.mesh, shadow)
   return {
     clump,
     wall,
     scene,
+    shadow,
   }
 }
 
 export function createClump(): Clump {
-  const clump: Clump = {
+  const clump = {
     container: new Object3D(),
     blocks: [],
   }
@@ -82,29 +88,9 @@ export function getNextBlockPosition(blocks: Object3D[]): Vector3 {
   return pickRandom(neighbors)
 }
 
-const colors = [
-  '#fcba15',
-  '#e5fc15',
-  '#94fc15',
-  '#15fc43',
-  '#07ecd9',
-  '#3290ff',
-  '#3c46ff',
-  '#6d3cff',
-  '#7e26ff',
-  '#ab06ff',
-  '#ff06f3',
-  '#ff0089',
-  '#ff0000',
-  '#ff5900',
-]
-let color = 0
-
+const blockGeometry = new BoxGeometry()
 export function addBlockToClump(clump: Clump, position: Vector3) {
-  const newBlock = new Mesh(
-    new BoxGeometry(),
-    new MeshPhongMaterial({ color: colors[color++ % colors.length] })
-  )
+  const newBlock = new Mesh(blockGeometry, getBlockMaterial())
   newBlock.position.copy(position)
   newBlock.updateMatrix()
   clump.container.add(newBlock)
@@ -177,10 +163,49 @@ export function getInvalidBlocksAtZ(blocks: Mesh[], holeBlocks: Object3D[], z: n
   return getInvalidBlocks(blocks, holeBlocks).filter((b) => b.position.z === z)
 }
 
-export function removeBlocks(clump: Clump, removeBlocks: Mesh[]) {
+export function removeBlocksFromClump(clump: Clump, removeBlocks: Mesh[]) {
   removeBlocks.forEach((b) => {
     b.removeFromParent()
     b.geometry.dispose()
   })
   clump.blocks = <Mesh[]>[...clump.container.children]
+}
+
+const shadowMaterial = new MeshBasicMaterial({ color: '#571533' })
+function createShadowMesh(blocks: Mesh[], axis: 'x' | 'y' | 'z'): Mesh {
+  let shadow: Mesh | undefined
+  for (const block of blocks) {
+    if (!shadow) {
+      shadow = block.clone()
+      continue
+    }
+    const flatBlock = block.clone()
+    flatBlock.position[axis] = 0
+    flatBlock.updateMatrix()
+    shadow = CSG.union(shadow, flatBlock)
+  }
+  shadow!.material = shadowMaterial
+  shadow!.scale[axis] = 0.001
+  return shadow!
+}
+
+function getClumpShadows(blocks: Mesh[]): Object3D {
+  const shadowContainer = new Object3D()
+  const bottomShadow = createShadowMesh(blocks, 'y')
+  bottomShadow.position.y = CLUMP_DIAMETER / 2 + 1 + 0.01
+  const topShadow = bottomShadow.clone()
+  topShadow.position.y = -bottomShadow.position.y
+  const rightShadow = createShadowMesh(blocks, 'x')
+  rightShadow.position.x = CLUMP_DIAMETER / 2 + 1 + 0.01
+  const leftShadow = rightShadow.clone()
+  leftShadow.position.x = -rightShadow.position.x
+  shadowContainer.add(bottomShadow, topShadow, rightShadow, leftShadow)
+  return shadowContainer
+}
+
+export function updateClumpShadows(puzzle: Puzzle) {
+  puzzle.shadow.removeFromParent()
+  puzzle.shadow.children.forEach((s) => (<Mesh>s).geometry.dispose())
+  puzzle.shadow = getClumpShadows(puzzle.clump.blocks)
+  puzzle.scene.add(puzzle.shadow)
 }
