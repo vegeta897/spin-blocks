@@ -1,5 +1,6 @@
 import { PerspectiveCamera, Vector3 } from 'three'
 import { sineOut } from '@gamestdio/easing'
+import { CLUMP_DIAMETER } from './puzzle'
 
 const LEFT = -4.5
 const RIGHT = 4.5
@@ -35,6 +36,6 @@ export function stopCamera() {
 const lookAt = new Vector3(0, 0, -10)
 
 export function updateCamera(camera: PerspectiveCamera) {
-  camera.position.set(cameraX, cameraY, 7)
+  camera.position.set(cameraX, cameraY, CLUMP_DIAMETER / 2 + 5)
   camera.lookAt(lookAt)
 }

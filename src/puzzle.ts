@@ -22,7 +22,7 @@ import {
 import { get } from 'svelte/store'
 import { blockCount } from './store'
 
-const CLUMP_DIAMETER = 7
+export const CLUMP_DIAMETER = 7
 export const WALL_SIZE = CLUMP_DIAMETER + 2
 export const CLUMP_RADIUS = Math.floor(CLUMP_DIAMETER / 2)
 
