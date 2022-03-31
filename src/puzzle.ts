@@ -97,7 +97,7 @@ export function addBlockToClump(clump: Clump, position: Vector3) {
   )
   newBlock.position.copy(position)
   newBlock.updateMatrix()
-  clump.container.attach(newBlock)
+  clump.container.add(newBlock)
   clump.blocks.push(newBlock)
 }
 

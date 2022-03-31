@@ -40,7 +40,7 @@ export function update(puzzle: Puzzle) {
       }
     }
   }
-  if (wall.mesh.position.z > -CLUMP_RADIUS - 8 * wallSpeed) {
+  if (wall.mesh.position.z > -CLUMP_RADIUS - wallSpeed) {
     lockControls()
   }
   if (wall.mesh.position.z > -(wallSpeed ** 2)) {
