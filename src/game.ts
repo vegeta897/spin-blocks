@@ -77,7 +77,6 @@ export const initGame = (canvas: HTMLCanvasElement) => {
 }
 
 export const startGame = () => {
-  // if (_gameState === 'running') return
   gameState.set('running')
   ticker.start()
   initCamera()

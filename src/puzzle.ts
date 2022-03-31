@@ -9,7 +9,14 @@ import {
   Vector3,
 } from 'three'
 import { CSG } from 'three-csg-ts'
-import { CardinalAxes, get6Neighbors, pickRandom, randomInt, xyIsEqual } from './util'
+import {
+  CardinalAxes,
+  get6Neighbors,
+  pickRandom,
+  randomInt,
+  xyEqualInGroup,
+  xyIsEqual,
+} from './util'
 import { get } from 'svelte/store'
 import { blockCount } from './store'
 
@@ -49,7 +56,7 @@ export function createClump(): Clump {
   }
   addBlockToClump(clump, new Vector3())
   while (clump.blocks.length < get(blockCount)) {
-    addBlockToClump(clump, getNextBlockPosition(clump))
+    addBlockToClump(clump, getNextBlockPosition(clump.blocks))
   }
   // TODO: Center result on 0,0
   return clump
@@ -60,12 +67,14 @@ const clumpBoundingBox = new Box3(
   new Vector3(CLUMP_RADIUS, CLUMP_RADIUS, CLUMP_RADIUS)
 )
 
-export function getNextBlockPosition(clump: Clump): Vector3 {
+export function getNextBlockPosition(blocks: Object3D[]): Vector3 {
+  const shadowIsOneBlock = xyEqualInGroup(blocks)
   const neighbors: Vector3[] = []
-  for (const block of clump.blocks) {
+  for (const block of blocks) {
     for (const neighbor of get6Neighbors(block.position)) {
       if (!clumpBoundingBox.containsPoint(neighbor)) continue
-      if (clump.blocks.some((b) => b.position.equals(neighbor))) continue
+      if (blocks.some((b) => b.position.equals(neighbor))) continue
+      if (shadowIsOneBlock && xyIsEqual(block.position, neighbor)) continue
       neighbors.push(neighbor)
     }
   }
@@ -87,6 +96,7 @@ const colors = [
   '#ff06f3',
   '#ff0089',
   '#ff0000',
+  '#ff5900',
 ]
 let color = 0
 
@@ -101,16 +111,25 @@ export function addBlockToClump(clump: Clump, position: Vector3) {
   clump.blocks.push(newBlock)
 }
 
-export function randomizeRotation(blocks: Object3D[]) {
-  // Pitch up, yaw left, roll left
-  ;[CardinalAxes[0], CardinalAxes[2], CardinalAxes[4]].forEach((axis) => {
-    const rotations = randomInt(0, 3)
-    for (let i = 0; i < rotations; i++) {
-      rotateBlocks(blocks, axis)
-    }
-  })
-  // TODO: Ensure final result does not equal initial state
-  // And ensure final result won't fit in hole of initial state
+// Pitch up, yaw left, roll left
+const randomAxes = [CardinalAxes[0], CardinalAxes[2], CardinalAxes[4]] as const
+export function randomizeRotation(blocks: Mesh[]) {
+  if (blocks.length === 1) return
+  const shadowIsOneBlock = xyEqualInGroup(blocks)
+  let attempts = 0
+  const clump = blocks.map((b) => b.clone())
+  do {
+    // Rotate until clump does not fit in shadow
+    randomAxes.forEach((axis) => {
+      const rotations = randomInt(0, 3)
+      for (let i = 0; i < rotations; i++) {
+        rotateBlocks(blocks, axis)
+      }
+    })
+    // No rotation will cause a one-block-shadow clump to be invalid
+    if (shadowIsOneBlock) break
+    attempts++
+  } while (getInvalidBlocks(clump, blocks).length === 0 && attempts < 100)
 }
 
 export interface Wall {
@@ -148,12 +167,14 @@ export function rotateBlocks(blocks: Object3D[], axis: Vector3) {
   })
 }
 
-export function getInvalidBlocks(clump: Clump, wall: Wall, z: number): Mesh[] {
-  return clump.blocks.filter(
-    (clumpBlock) =>
-      clumpBlock.position.z === z &&
-      !wall.holeBlocks.some((hb) => xyIsEqual(hb.position, clumpBlock.position))
+function getInvalidBlocks(blocks: Mesh[], holeBlocks: Object3D[]): Mesh[] {
+  return blocks.filter(
+    (clumpBlock) => !holeBlocks.some((hb) => xyIsEqual(hb.position, clumpBlock.position))
   )
+}
+
+export function getInvalidBlocksAtZ(blocks: Mesh[], holeBlocks: Object3D[], z: number): Mesh[] {
+  return getInvalidBlocks(blocks, holeBlocks).filter((b) => b.position.z === z)
 }
 
 export function removeBlocks(clump: Clump, removeBlocks: Mesh[]) {
