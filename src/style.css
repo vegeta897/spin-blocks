@@ -6,6 +6,7 @@
 body {
   background-color: #330f1f;
   font-family: 'Arial Black', serif;
+  user-select: none;
 }
 
 main {

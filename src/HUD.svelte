@@ -14,7 +14,6 @@
     justify-content: center;
     width: 100%;
     padding-top: 2em;
-    user-select: none;
   }
   h2 {
     color: #c8ff00;
