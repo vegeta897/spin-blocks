@@ -24,6 +24,7 @@
     "code-style-check": "npm run lint-check && npm run prettier:check",
     "serve": "npx sirv-cli dist --port 8081",
     "publish": "butler push dist/app.zip vegeta897/spinblocks:html5",
+    "build-publish": "npm run build && npm run publish",
     "status": "butler status vegeta897/spinblocks:html5"
   },
   "dependencies": {
