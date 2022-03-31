@@ -14,9 +14,9 @@ import { initCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
 import { gameState } from './store'
 import { get } from 'svelte/store'
+import { Ticker } from './util'
 
 const TICK_RATE = 60
-const TICK_TIME = 1000 / TICK_RATE
 
 const scene = new Scene()
 scene.background = new Color('#330f1f')
@@ -48,30 +48,13 @@ const puzzle = createPuzzle(scene)
 let _gameState = get(gameState)
 gameState.subscribe((gs) => (_gameState = gs))
 
-let lag: number
-let lastUpdate: number
-function animate() {
-  if (_gameState === 'stopped') return
-  const now = performance.now()
-  let delta = now - lastUpdate
-  if (delta > 1000) delta = 1000
-  lag += delta
-  while (lag >= TICK_TIME) {
-    update(puzzle)
-    animateClump(puzzle.clump)
-    lag -= TICK_TIME
-  }
-  lastUpdate = now
-  requestAnimationFrame(animate)
-  updateCamera(camera)
-  renderer.render(scene, camera)
-}
-
 function resize() {
   renderer.setSize(window.innerWidth, window.innerHeight)
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
 }
+
+let ticker: Ticker
 
 export const initGame = (canvas: HTMLCanvasElement) => {
   gameState.set('initialized')
@@ -79,15 +62,24 @@ export const initGame = (canvas: HTMLCanvasElement) => {
   renderer.setPixelRatio(window.devicePixelRatio)
   resize()
   updateCamera(camera)
+  ticker = new Ticker(
+    () => {
+      update(puzzle)
+      animateClump(puzzle.clump)
+    },
+    () => {
+      updateCamera(camera)
+      renderer.render(scene, camera)
+    },
+    TICK_RATE
+  )
   renderer.render(scene, camera)
 }
 
 export const startGame = () => {
-  if (_gameState === 'running') return
+  // if (_gameState === 'running') return
   gameState.set('running')
-  lag = 0
-  lastUpdate = performance.now()
-  animate()
+  ticker.start()
   initCamera()
   initControls()
   window.addEventListener('resize', resize)
@@ -95,6 +87,7 @@ export const startGame = () => {
 
 export const stopGame = () => {
   gameState.set('stopped')
+  ticker.stop()
   renderer.dispose()
   stopCamera()
   stopControls()

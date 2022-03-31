@@ -34,7 +34,7 @@ export function update(puzzle: Puzzle) {
         const invalidBlocks = getInvalidBlocks(clump, wall, checkZ)
         if (invalidBlocks.length > 0) {
           removeBlocks(clump, invalidBlocks)
-          blockCount.update((count) => clump.blocks.length)
+          blockCount.update(() => clump.blocks.length)
         }
         break
       }
