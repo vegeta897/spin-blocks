@@ -10,18 +10,16 @@ import {
 } from 'three'
 import { createPuzzle, WALL_SIZE } from './puzzle'
 import { initControls, animateClump, stopControls } from './control'
-import { initCamera, stopCamera, updateCamera } from './camera'
+import { Camera, initCamera, resizeCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
 import { gameState } from './store'
 import { get } from 'svelte/store'
 import { Ticker } from './util'
 
 const TICK_RATE = 60
-const FOV = 85
 
 const scene = new Scene()
 scene.background = new Color('#330f1f')
-const camera = new PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, 0.1, 100)
 let renderer: WebGLRenderer
 
 const ambientLight = new AmbientLight('#6b566b', 1)
@@ -47,8 +45,7 @@ gameState.subscribe((gs) => (_gameState = gs))
 
 function resize() {
   renderer.setSize(window.innerWidth, window.innerHeight)
-  camera.aspect = window.innerWidth / window.innerHeight
-  camera.updateProjectionMatrix()
+  resizeCamera()
 }
 
 let ticker: Ticker
@@ -58,19 +55,19 @@ export const initGame = (canvas: HTMLCanvasElement) => {
   renderer = new WebGLRenderer({ antialias: true, canvas })
   renderer.setPixelRatio(window.devicePixelRatio)
   resize()
-  updateCamera(camera)
+  updateCamera()
+  renderer.render(scene, Camera)
   ticker = new Ticker(
     () => {
       update(puzzle)
       animateClump(puzzle)
     },
-    () => {
-      updateCamera(camera)
-      renderer.render(scene, camera)
+    (dt) => {
+      updateCamera()
+      renderer.render(scene, Camera)
     },
     TICK_RATE
   )
-  renderer.render(scene, camera)
 }
 
 export const startGame = () => {

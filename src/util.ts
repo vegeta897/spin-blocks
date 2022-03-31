@@ -31,7 +31,7 @@ export function xyEqualInGroup(group: Object3D[]): boolean {
 
 export class Ticker {
   private readonly update: () => void
-  private readonly animate: () => void
+  private readonly animate: (dt: number) => void
   private _running = false
   private lag = 0
   private lastUpdate = 0
@@ -39,7 +39,7 @@ export class Ticker {
   get running(): boolean {
     return this._running
   }
-  constructor(updateFn: () => void, animateFn: () => void, tickRate: number) {
+  constructor(updateFn: () => void, animateFn: (dt: number) => void, tickRate: number) {
     this.update = updateFn
     this.animate = animateFn
     this.tickTime = 1000 / tickRate
@@ -63,7 +63,7 @@ export class Ticker {
       this.lag -= this.tickTime
     }
     this.lastUpdate = now
-    this.animate()
+    this.animate(delta)
     requestAnimationFrame(this.tick.bind(this))
   }
 }

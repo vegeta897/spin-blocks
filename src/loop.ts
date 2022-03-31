@@ -12,6 +12,7 @@ import {
 import { blockCount } from './store'
 import type { MeshLambertMaterial } from 'three'
 import { lockControls, unlockControls } from './control'
+import { zoomCameraToDefault, zoomInCamera } from './camera'
 
 let turboMode = false
 
@@ -25,7 +26,12 @@ let wallSpeed = DEFAULT_WALL_SPEED
 
 export function update(puzzle: Puzzle) {
   const { wall, clump } = puzzle
-  if (turboMode) wallSpeed = Math.min(MAX_WALL_SPEED, (wallSpeed += 0.1))
+  if (turboMode) {
+    wallSpeed = Math.min(MAX_WALL_SPEED, (wallSpeed += 0.1))
+    zoomInCamera(((wallSpeed + (1 - DEFAULT_WALL_SPEED)) / 3) ** 4)
+  } else {
+    zoomCameraToDefault()
+  }
   const nextWallZ = wall.mesh.position.z + wallSpeed
   while (wall.mesh.position.z < nextWallZ) {
     const previousWallZ = wall.mesh.position.z
