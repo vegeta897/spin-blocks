@@ -12,12 +12,7 @@ const BOTTOM = -4.5
 let cameraX = 0
 let cameraY = 0
 
-export const Camera = new PerspectiveCamera(
-  DEFAULT_FOV,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  100
-)
+const camera = new PerspectiveCamera(DEFAULT_FOV, window.innerWidth / window.innerHeight, 0.1, 100)
 
 function onMouseMove(e: MouseEvent) {
   const halfWidth = window.innerWidth / 2
@@ -34,33 +29,29 @@ function onMouseMove(e: MouseEvent) {
   }
 }
 
-export function initCamera() {
-  window.addEventListener('mousemove', onMouseMove)
-}
+export const getCamera = () => camera
+export const initCamera = () => window.addEventListener('mousemove', onMouseMove)
+export const stopCamera = () => window.removeEventListener('mousemove', onMouseMove)
 
-export function stopCamera() {
-  window.removeEventListener('mousemove', onMouseMove)
-}
-
-const lookAt = new Vector3(0, 0, -10)
+const cameraTarget = new Vector3(0, 0, -10)
 
 export function updateCamera() {
-  Camera.position.set(cameraX, cameraY, CLUMP_DIAMETER / 2 + 5)
-  Camera.lookAt(lookAt)
+  camera.position.set(cameraX, cameraY, CLUMP_DIAMETER / 2 + 5)
+  camera.lookAt(cameraTarget)
 }
 
 export function resizeCamera() {
-  Camera.aspect = window.innerWidth / window.innerHeight
-  Camera.updateProjectionMatrix()
+  camera.aspect = window.innerWidth / window.innerHeight
+  camera.updateProjectionMatrix()
 }
 
 export function zoomInCamera(fovDecrease: number) {
-  Camera.fov = Math.max(45, Camera.fov - fovDecrease)
-  Camera.updateProjectionMatrix()
+  camera.fov = Math.max(45, camera.fov - fovDecrease)
+  camera.updateProjectionMatrix()
 }
 
 export function zoomCameraToDefault() {
-  if (Camera.fov === DEFAULT_FOV) return
-  Camera.fov = Math.min(DEFAULT_FOV, Camera.fov + (DEFAULT_FOV - Camera.fov) / 5)
-  Camera.updateProjectionMatrix()
+  if (camera.fov === DEFAULT_FOV) return
+  camera.fov = Math.min(DEFAULT_FOV, camera.fov + (DEFAULT_FOV - camera.fov) / 5)
+  camera.updateProjectionMatrix()
 }

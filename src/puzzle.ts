@@ -30,12 +30,12 @@ export interface Puzzle {
   clump: Clump
   wall: Wall
   scene: Scene
-  shadow: Object3D
 }
 
 export interface Clump {
   container: Object3D
   blocks: Mesh[]
+  shadow: Object3D | null
 }
 
 // TODO: Change all block data/functions to work with Vector3s instead of Mesh/Object3D, update actual block meshes when needed
@@ -45,20 +45,20 @@ export function createPuzzle(scene: Scene): Puzzle {
   const wall = createWall(clump.blocks)
   wall.mesh.position.z = -50
   randomizeRotation(clump.blocks)
-  const shadow = getClumpShadows(clump.blocks)
-  scene.add(clump.container, wall.mesh, shadow)
-  return {
+  const puzzle = {
     clump,
     wall,
     scene,
-    shadow,
   }
+  updateClumpShadows(puzzle)
+  return puzzle
 }
 
 export function createClump(): Clump {
   const clump = {
     container: new Object3D(),
     blocks: [],
+    shadow: null,
   }
   addBlockToClump(clump, new Vector3())
   while (clump.blocks.length < get(blockCount)) {
@@ -204,8 +204,10 @@ function getClumpShadows(blocks: Mesh[]): Object3D {
 }
 
 export function updateClumpShadows(puzzle: Puzzle) {
-  puzzle.shadow.removeFromParent()
-  puzzle.shadow.children.forEach((s) => (<Mesh>s).geometry.dispose())
-  puzzle.shadow = getClumpShadows(puzzle.clump.blocks)
-  puzzle.scene.add(puzzle.shadow)
+  if (puzzle.clump.shadow) {
+    puzzle.clump.shadow.removeFromParent()
+    puzzle.clump.shadow.children.forEach((s) => (<Mesh>s).geometry.dispose())
+  }
+  puzzle.clump.shadow = getClumpShadows(puzzle.clump.blocks)
+  puzzle.scene.add(puzzle.clump.shadow)
 }

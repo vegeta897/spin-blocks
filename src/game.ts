@@ -4,13 +4,12 @@ import {
   DirectionalLight,
   GridHelper,
   Object3D,
-  PerspectiveCamera,
   Scene,
   WebGLRenderer,
 } from 'three'
 import { createPuzzle, WALL_SIZE } from './puzzle'
 import { initControls, animateClump, stopControls } from './control'
-import { Camera, initCamera, resizeCamera, stopCamera, updateCamera } from './camera'
+import { getCamera, initCamera, resizeCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
 import { gameState } from './store'
 import { get } from 'svelte/store'
@@ -56,7 +55,8 @@ export const initGame = (canvas: HTMLCanvasElement) => {
   renderer.setPixelRatio(window.devicePixelRatio)
   resize()
   updateCamera()
-  renderer.render(scene, Camera)
+  const camera = getCamera()
+  renderer.render(scene, camera)
   ticker = new Ticker(
     () => {
       update(puzzle)
@@ -64,7 +64,7 @@ export const initGame = (canvas: HTMLCanvasElement) => {
     },
     (dt) => {
       updateCamera()
-      renderer.render(scene, Camera)
+      renderer.render(scene, camera)
     },
     TICK_RATE
   )
