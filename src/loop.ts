@@ -1,5 +1,4 @@
 import {
-  addBlockToClump,
   CLUMP_RADIUS,
   createWall,
   getInvalidBlocksAtZ,
@@ -7,6 +6,7 @@ import {
   Puzzle,
   randomizeRotation,
   removeBlocksFromClump,
+  updateClumpBlockMeshes,
   updateClumpShadows,
 } from './puzzle'
 import { blockCount } from './store'
@@ -38,11 +38,16 @@ export function update(puzzle: Puzzle) {
     wall.mesh.position.z = Math.min(nextWallZ, wall.mesh.position.z + 1)
     for (let checkZ = -CLUMP_RADIUS; checkZ <= CLUMP_RADIUS; checkZ++) {
       if (previousWallZ < checkZ - 1 && wall.mesh.position.z >= checkZ - 1) {
-        const invalidBlocks = getInvalidBlocksAtZ(clump.blocks, wall.holeBlocks, checkZ)
+        const invalidBlocks = getInvalidBlocksAtZ(
+          [...clump.blocks.keys()],
+          wall.holeVectors,
+          checkZ
+        )
         if (invalidBlocks.length > 0) {
           removeBlocksFromClump(clump, invalidBlocks)
+          updateClumpBlockMeshes(clump)
           updateClumpShadows(puzzle)
-          blockCount.update(() => clump.blocks.length)
+          blockCount.update(() => clump.blocks.size)
         }
         break
       }
@@ -59,10 +64,11 @@ export function update(puzzle: Puzzle) {
     ;(<MeshLambertMaterial>wall.mesh.material).opacity = 1 - fadeProgress
   }
   if (wall.mesh.position.z > CLUMP_RADIUS + 2) {
-    addBlockToClump(clump, getNextBlockPosition(clump.blocks))
-    blockCount.update(() => clump.blocks.length)
-    const newRotation = clump.blocks.map((b) => b.clone())
+    clump.blocks.set(getNextBlockPosition([...clump.blocks.keys()]), null)
+    blockCount.update(() => clump.blocks.size)
+    const newRotation = [...clump.blocks.keys()].map((v) => v.clone())
     randomizeRotation(newRotation)
+    updateClumpBlockMeshes(clump)
     updateClumpShadows(puzzle)
     const oldWall = wall
     oldWall.mesh.removeFromParent()

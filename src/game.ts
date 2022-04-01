@@ -3,7 +3,7 @@ import {
   Color,
   DirectionalLight,
   GridHelper,
-  Object3D,
+  Group,
   Scene,
   WebGLRenderer,
 } from 'three'
@@ -27,7 +27,7 @@ directionalLight.position.set(20, 30, 0)
 directionalLight.target.position.set(0, 0, -50)
 scene.add(ambientLight, directionalLight, directionalLight.target)
 
-const gridTopBottom = new Object3D()
+const gridTopBottom = new Group()
 const gridBottom = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#981e56')
 gridBottom.position.y = -WALL_SIZE / 2
 const gridTop = gridBottom.clone()

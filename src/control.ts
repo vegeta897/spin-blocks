@@ -1,5 +1,5 @@
 import { Quaternion } from 'three'
-import { Puzzle, rotateBlocks, updateClumpShadows } from './puzzle'
+import { Puzzle, rotateBlocks, updateClumpBlockMeshes, updateClumpShadows } from './puzzle'
 import { CardinalAxes } from './util'
 import { cubicOut } from '@gamestdio/easing'
 import { turbo } from './loop'
@@ -19,14 +19,15 @@ for (let i = 1; i <= rotateFrames; i++) {
 }
 export function animateClump(puzzle: Puzzle) {
   if (rotationIndex === false) return
-  puzzle.clump.container.quaternion.rotateTowards(
+  puzzle.clump.blockContainer.quaternion.rotateTowards(
     rotationQuaternions[rotationIndex],
     easedSteps[rotateFrame]
   )
   rotateFrame++
   if (rotateFrame === rotateFrames) {
-    puzzle.clump.container.rotation.set(0, 0, 0)
-    rotateBlocks(puzzle.clump.blocks, CardinalAxes[rotationIndex])
+    puzzle.clump.blockContainer.rotation.set(0, 0, 0)
+    rotateBlocks([...puzzle.clump.blocks.keys()], CardinalAxes[rotationIndex])
+    updateClumpBlockMeshes(puzzle.clump)
     updateClumpShadows(puzzle)
     rotationIndex = false
     rotateFrame = 0

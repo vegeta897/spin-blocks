@@ -1,4 +1,4 @@
-import { MeshPhongMaterial, Object3D, Vector3 } from 'three'
+import { MeshPhongMaterial, Vector3 } from 'three'
 
 export function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -25,8 +25,8 @@ export function xyIsEqual(v1: Vector3, v2: Vector3): boolean {
   return v1.x === v2.x && v1.y === v2.y
 }
 
-export function xyEqualInGroup(group: Object3D[]): boolean {
-  return group.every((obj) => xyIsEqual(obj.position, group[0].position))
+export function xyEqualInAll(group: Vector3[]): boolean {
+  return group.every((v) => xyIsEqual(v, group[0]))
 }
 
 export class Ticker {

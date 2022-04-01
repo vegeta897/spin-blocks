@@ -2,10 +2,10 @@ import {
   Box3,
   BoxGeometry,
   GridHelper,
+  Group,
   Mesh,
   MeshBasicMaterial,
   MeshPhongMaterial,
-  Object3D,
   Scene,
   Vector3,
 } from 'three'
@@ -16,7 +16,7 @@ import {
   getBlockMaterial,
   pickRandom,
   randomInt,
-  xyEqualInGroup,
+  xyEqualInAll,
   xyIsEqual,
 } from './util'
 import { get } from 'svelte/store'
@@ -33,37 +33,43 @@ export interface Puzzle {
 }
 
 export interface Clump {
-  container: Object3D
-  blocks: Mesh[]
-  shadow: Object3D | null
+  blockContainer: Group
+  blocks: Map<Vector3, Mesh | null>
+  shadow: Group | null
 }
 
-// TODO: Change all block data/functions to work with Vector3s instead of Mesh/Object3D, update actual block meshes when needed
+export interface Wall {
+  mesh: Mesh
+  holeVectors: Vector3[]
+}
 
 export function createPuzzle(scene: Scene): Puzzle {
   const clump = createClump()
-  const wall = createWall(clump.blocks)
+  const blockVectors = [...clump.blocks.keys()]
+  const wall = createWall(blockVectors)
   wall.mesh.position.z = -50
-  randomizeRotation(clump.blocks)
+  randomizeRotation(blockVectors)
+  updateClumpBlockMeshes(clump)
   const puzzle = {
     clump,
     wall,
     scene,
   }
   updateClumpShadows(puzzle)
+  scene.add(clump.blockContainer, clump.shadow!, wall.mesh)
   return puzzle
 }
 
 export function createClump(): Clump {
-  const clump = {
-    container: new Object3D(),
-    blocks: [],
+  const clump: Clump = {
+    blockContainer: new Group(),
+    blocks: new Map([[new Vector3(), null]]),
     shadow: null,
   }
-  addBlockToClump(clump, new Vector3())
-  while (clump.blocks.length < get(blockCount)) {
-    addBlockToClump(clump, getNextBlockPosition(clump.blocks))
+  while (clump.blocks.size < get(blockCount)) {
+    clump.blocks.set(getNextBlockPosition([...clump.blocks.keys()]), null)
   }
+  updateClumpBlockMeshes(clump)
   // TODO: Center result on 0,0
   return clump
 }
@@ -73,14 +79,14 @@ const clumpBoundingBox = new Box3(
   new Vector3(CLUMP_RADIUS, CLUMP_RADIUS, CLUMP_RADIUS)
 )
 
-export function getNextBlockPosition(blocks: Object3D[]): Vector3 {
-  const shadowIsOneBlock = xyEqualInGroup(blocks)
+export function getNextBlockPosition(blockVectors: Vector3[]): Vector3 {
+  const shadowIsOneBlock = xyEqualInAll(blockVectors)
   const neighbors: Vector3[] = []
-  for (const block of blocks) {
-    for (const neighbor of get6Neighbors(block.position)) {
+  for (const blockVector of blockVectors) {
+    for (const neighbor of get6Neighbors(blockVector)) {
       if (!clumpBoundingBox.containsPoint(neighbor)) continue
-      if (blocks.some((b) => b.position.equals(neighbor))) continue
-      if (shadowIsOneBlock && xyIsEqual(block.position, neighbor)) continue
+      if (blockVectors.some((v) => v.equals(neighbor))) continue
+      if (shadowIsOneBlock && xyIsEqual(blockVector, neighbor)) continue
       neighbors.push(neighbor)
     }
   }
@@ -89,55 +95,57 @@ export function getNextBlockPosition(blocks: Object3D[]): Vector3 {
 }
 
 const blockGeometry = new BoxGeometry()
-export function addBlockToClump(clump: Clump, position: Vector3) {
-  const newBlock = new Mesh(blockGeometry, getBlockMaterial())
-  newBlock.position.copy(position)
-  newBlock.updateMatrix()
-  clump.container.add(newBlock)
-  clump.blocks.push(newBlock)
+export function updateClumpBlockMeshes(clump: Clump) {
+  for (let [vector, mesh] of clump.blocks) {
+    const newBlock = !mesh
+    mesh = mesh || new Mesh(blockGeometry, getBlockMaterial())
+    mesh.position.copy(vector)
+    mesh.updateMatrix()
+    if (newBlock) {
+      clump.blockContainer.add(mesh)
+      clump.blocks.set(vector, mesh)
+    }
+  }
 }
 
 // Pitch up, yaw left, roll left
 const randomAxes = [CardinalAxes[0], CardinalAxes[2], CardinalAxes[4]] as const
-export function randomizeRotation(blocks: Mesh[]) {
-  if (blocks.length === 1) return
-  const shadowIsOneBlock = xyEqualInGroup(blocks)
+export function randomizeRotation(blockVectors: Vector3[]) {
+  if (blockVectors.length === 1) return
+  const shadowIsOneBlock = xyEqualInAll(blockVectors)
   let attempts = 0
-  const clump = blocks.map((b) => b.clone())
+  const clump = blockVectors.map((b) => b.clone())
   do {
     // Rotate until clump does not fit in shadow
     randomAxes.forEach((axis) => {
       const rotations = randomInt(0, 3)
       for (let i = 0; i < rotations; i++) {
-        rotateBlocks(blocks, axis)
+        rotateBlocks(blockVectors, axis)
       }
     })
     // No rotation will cause a one-block-shadow clump to be invalid
     if (shadowIsOneBlock) break
     attempts++
-  } while (getInvalidBlocks(clump, blocks).length === 0 && attempts < 100)
-}
-
-export interface Wall {
-  mesh: Mesh
-  holeBlocks: Object3D[]
+  } while (getInvalidBlocks(clump, blockVectors).length === 0 && attempts < 100)
 }
 
 const wallMaterial = new MeshPhongMaterial({ color: '#d22573', transparent: true })
-export function createWall(blocks: Mesh[]): Wall {
+const holeBlock = new Mesh(blockGeometry)
+export function createWall(blockVectors: Vector3[]): Wall {
   wallMaterial.opacity = 1
   const wall: Wall = {
     mesh: new Mesh(new BoxGeometry(WALL_SIZE, WALL_SIZE, 1), wallMaterial),
-    holeBlocks: [],
+    holeVectors: [],
   }
-  for (const block of blocks) {
-    const flatBlock = block.clone()
-    flatBlock.position.z = 0
-    flatBlock.updateMatrix()
-    wall.mesh = CSG.subtract(wall.mesh, flatBlock)
-    if (!wall.holeBlocks.some((hb) => xyIsEqual(hb.position, flatBlock.position))) {
-      wall.holeBlocks.push(flatBlock)
+  for (const blockVector of blockVectors) {
+    if (wall.holeVectors.some((hv) => xyIsEqual(hv, blockVector))) {
+      continue
     }
+    holeBlock.position.copy(blockVector)
+    holeBlock.position.z = 0
+    wall.holeVectors.push(holeBlock.position.clone())
+    holeBlock.updateMatrix()
+    wall.mesh = CSG.subtract(wall.mesh, holeBlock)
   }
   const wallGrid = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#5b1b38')
   wallGrid.position.z = -0.5
@@ -146,29 +154,35 @@ export function createWall(blocks: Mesh[]): Wall {
   return wall
 }
 
-export function rotateBlocks(blocks: Object3D[], axis: Vector3) {
-  blocks.forEach((block) => {
-    block.position.applyAxisAngle(axis, Math.PI / 2)
-    block.position.round()
+export function rotateBlocks(blockVectors: Vector3[], axis: Vector3) {
+  blockVectors.forEach((blockVector) => {
+    blockVector.applyAxisAngle(axis, Math.PI / 2)
+    blockVector.round()
   })
 }
 
-function getInvalidBlocks(blocks: Mesh[], holeBlocks: Object3D[]): Mesh[] {
-  return blocks.filter(
-    (clumpBlock) => !holeBlocks.some((hb) => xyIsEqual(hb.position, clumpBlock.position))
-  )
+function getInvalidBlocks(blockVectors: Vector3[], holeVectors: Vector3[]): Vector3[] {
+  return blockVectors.filter((blockV) => !holeVectors.some((holeV) => xyIsEqual(holeV, blockV)))
 }
 
-export function getInvalidBlocksAtZ(blocks: Mesh[], holeBlocks: Object3D[], z: number): Mesh[] {
-  return getInvalidBlocks(blocks, holeBlocks).filter((b) => b.position.z === z)
+export function getInvalidBlocksAtZ(
+  blockVectors: Vector3[],
+  holeVectors: Vector3[],
+  z: number
+): Vector3[] {
+  return getInvalidBlocks(blockVectors, holeVectors).filter((bv) => bv.z === z)
 }
 
-export function removeBlocksFromClump(clump: Clump, removeBlocks: Mesh[]) {
-  removeBlocks.forEach((b) => {
-    b.removeFromParent()
-    b.geometry.dispose()
+export function removeBlocksFromClump(clump: Clump, removeVectors: Vector3[]) {
+  clump.blocks.forEach((mesh, vector) => {
+    if (removeVectors.some((rv) => vector.equals(rv))) {
+      clump.blocks.delete(vector)
+      if (mesh) {
+        mesh.removeFromParent()
+        mesh.geometry.dispose()
+      }
+    }
   })
-  clump.blocks = <Mesh[]>[...clump.container.children]
 }
 
 const shadowMaterial = new MeshBasicMaterial({ color: '#571533' })
@@ -189,8 +203,9 @@ function createShadowMesh(blocks: Mesh[], axis: 'x' | 'y' | 'z'): Mesh {
   return shadow!
 }
 
-function getClumpShadows(blocks: Mesh[]): Object3D {
-  const shadowContainer = new Object3D()
+function getClumpShadows(clump: Clump): Group {
+  const blocks = <Mesh[]>clump.blockContainer.children
+  const shadowContainer = new Group()
   const bottomShadow = createShadowMesh(blocks, 'y')
   bottomShadow.position.y = CLUMP_DIAMETER / 2 + 1 + 0.01
   const topShadow = bottomShadow.clone()
@@ -208,6 +223,6 @@ export function updateClumpShadows(puzzle: Puzzle) {
     puzzle.clump.shadow.removeFromParent()
     puzzle.clump.shadow.children.forEach((s) => (<Mesh>s).geometry.dispose())
   }
-  puzzle.clump.shadow = getClumpShadows(puzzle.clump.blocks)
+  puzzle.clump.shadow = getClumpShadows(puzzle.clump)
   puzzle.scene.add(puzzle.clump.shadow)
 }
