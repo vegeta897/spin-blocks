@@ -21,7 +21,7 @@
     /*text-shadow: 4px 4px 10px #491630d0;*/
     /*font-size: 10em;*/
     text-transform: uppercase;
-    font-size: 5em;
+    font-size: 12vh;
     font-weight: 100;
     display: flex;
     flex-direction: column;
