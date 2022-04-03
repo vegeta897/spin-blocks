@@ -35,7 +35,7 @@ export function update(puzzle: Puzzle) {
     wallSpeed = Math.min(DEFAULT_WALL_SPEED, wallSpeed + 0.005)
     zoomCameraToDefault()
   }
-  const nextWallZ = wall.mesh.position.z + wallSpeed
+  let nextWallZ = wall.mesh.position.z + wallSpeed
   while (wall.mesh.position.z < nextWallZ) {
     const previousWallZ = wall.mesh.position.z
     wall.mesh.position.z = Math.min(nextWallZ, wall.mesh.position.z + 1)
@@ -47,7 +47,8 @@ export function update(puzzle: Puzzle) {
           checkZ
         )
         if (invalidBlocks.length > 0) {
-          wall.mesh.position.z = checkZ - 1
+          nextWallZ = checkZ - 1
+          wall.mesh.position.z = nextWallZ
           zoomInCamera(2)
           wallSpeed = 0
           const removedBlocks = removeBlocksFromClump(clump, invalidBlocks)
