@@ -2,8 +2,9 @@ import { PerspectiveCamera, Vector3 } from 'three'
 import { sineOut } from '@gamestdio/easing'
 import { CLUMP_DIAMETER } from './puzzle'
 
+export const CAMERA_Z = CLUMP_DIAMETER / 2 + 5
+const cameraTarget = new Vector3(0, 0, -10)
 const DEFAULT_FOV = 85
-export const CAMERA_Z = -10
 
 const LEFT = -4.5
 const RIGHT = 4.5
@@ -34,10 +35,8 @@ export const getCamera = () => camera
 export const initCamera = () => window.addEventListener('mousemove', onMouseMove)
 export const stopCamera = () => window.removeEventListener('mousemove', onMouseMove)
 
-const cameraTarget = new Vector3(0, 0, CAMERA_Z)
-
 export function updateCamera() {
-  camera.position.set(cameraX, cameraY, CLUMP_DIAMETER / 2 + 5)
+  camera.position.set(cameraX, cameraY, CAMERA_Z)
   camera.lookAt(cameraTarget)
 }
 

@@ -33,7 +33,7 @@ export function explodeBlock(block: Mesh, puzzle: Puzzle, turbo: boolean) {
 
 export function updateParticles(particles: Set<Particle>) {
   for (const particle of particles) {
-    if (particle.mesh.position.z < CAMERA_Z - 1 || particle.mesh.position.lengthSq() > 10000) {
+    if (particle.mesh.position.z > CAMERA_Z + 1 || particle.mesh.position.lengthSq() > 10000) {
       particle.mesh.geometry.dispose()
       particle.mesh.removeFromParent()
       particles.delete(particle)
