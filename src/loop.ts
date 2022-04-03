@@ -12,7 +12,8 @@ import {
 import { blockCount } from './store'
 import type { MeshLambertMaterial } from 'three'
 import { lockControls, unlockControls } from './control'
-import { zoomCameraToDefault, zoomInCamera } from './camera'
+import { zoomCameraTo, zoomCameraToDefault, zoomInCamera } from './camera'
+import { explodeBlock, updateParticles } from './particles'
 
 let turboMode = false
 
@@ -25,11 +26,13 @@ const MAX_WALL_SPEED = 5
 let wallSpeed = DEFAULT_WALL_SPEED
 
 export function update(puzzle: Puzzle) {
+  updateParticles(puzzle.particles)
   const { wall, clump } = puzzle
   if (turboMode) {
-    wallSpeed = Math.min(MAX_WALL_SPEED, (wallSpeed += 0.1))
+    wallSpeed = Math.min(MAX_WALL_SPEED, wallSpeed + (wallSpeed < DEFAULT_WALL_SPEED ? 0.02 : 0.1))
     zoomInCamera(((wallSpeed + (1 - DEFAULT_WALL_SPEED)) / 3) ** 4)
   } else {
+    wallSpeed = Math.min(DEFAULT_WALL_SPEED, wallSpeed + 0.005)
     zoomCameraToDefault()
   }
   const nextWallZ = wall.mesh.position.z + wallSpeed
@@ -44,7 +47,10 @@ export function update(puzzle: Puzzle) {
           checkZ
         )
         if (invalidBlocks.length > 0) {
-          removeBlocksFromClump(clump, invalidBlocks)
+          zoomInCamera(2)
+          wallSpeed = 0
+          const removedBlocks = removeBlocksFromClump(clump, invalidBlocks)
+          removedBlocks.forEach((b) => explodeBlock(b, puzzle, turboMode))
           updateClumpBlockMeshes(clump)
           updateClumpShadows(puzzle)
           blockCount.update(() => clump.blocks.size)

@@ -3,6 +3,7 @@ import { sineOut } from '@gamestdio/easing'
 import { CLUMP_DIAMETER } from './puzzle'
 
 const DEFAULT_FOV = 85
+export const CAMERA_Z = -10
 
 const LEFT = -4.5
 const RIGHT = 4.5
@@ -33,7 +34,7 @@ export const getCamera = () => camera
 export const initCamera = () => window.addEventListener('mousemove', onMouseMove)
 export const stopCamera = () => window.removeEventListener('mousemove', onMouseMove)
 
-const cameraTarget = new Vector3(0, 0, -10)
+const cameraTarget = new Vector3(0, 0, CAMERA_Z)
 
 export function updateCamera() {
   camera.position.set(cameraX, cameraY, CLUMP_DIAMETER / 2 + 5)
@@ -53,5 +54,11 @@ export function zoomInCamera(fovDecrease: number) {
 export function zoomCameraToDefault() {
   if (camera.fov === DEFAULT_FOV) return
   camera.fov = Math.min(DEFAULT_FOV, camera.fov + (DEFAULT_FOV - camera.fov) / 5)
+  camera.updateProjectionMatrix()
+}
+
+export function zoomCameraTo(fov: number) {
+  if (camera.fov === fov) return
+  camera.fov = fov
   camera.updateProjectionMatrix()
 }

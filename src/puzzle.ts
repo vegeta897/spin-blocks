@@ -3,6 +3,7 @@ import {
   BoxGeometry,
   GridHelper,
   Group,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   MeshPhongMaterial,
@@ -21,15 +22,21 @@ import {
 } from './util'
 import { get } from 'svelte/store'
 import { blockCount } from './store'
+import type { Particle } from './particles'
+import { explodeBlock } from './particles'
 
 export const CLUMP_DIAMETER = 7
 export const WALL_SIZE = CLUMP_DIAMETER + 2
 export const CLUMP_RADIUS = Math.floor(CLUMP_DIAMETER / 2)
 
+// TODO: Decide whether to stick with these pure-ish functions, or create classes
+// Try to abstract a lot of the crap in loop.ts to functions in here?
+
 export interface Puzzle {
   clump: Clump
   wall: Wall
   scene: Scene
+  particles: Set<Particle>
 }
 
 export interface Clump {
@@ -54,9 +61,10 @@ export function createPuzzle(scene: Scene): Puzzle {
     clump,
     wall,
     scene,
+    particles: <Set<Particle>>new Set(),
   }
   updateClumpShadows(puzzle)
-  scene.add(clump.blockContainer, clump.shadow!, wall.mesh)
+  scene.add(clump.blockContainer, wall.mesh)
   return puzzle
 }
 
@@ -69,7 +77,7 @@ export function createClump(): Clump {
   while (clump.blocks.size < get(blockCount)) {
     clump.blocks.set(getNextBlockPosition([...clump.blocks.keys()]), null)
   }
-  updateClumpBlockMeshes(clump)
+  // updateClumpBlockMeshes(clump)
   // TODO: Center result on 0,0
   return clump
 }
@@ -133,25 +141,28 @@ const wallMaterial = new MeshPhongMaterial({ color: '#d22573', transparent: true
 const holeBlock = new Mesh(blockGeometry)
 export function createWall(blockVectors: Vector3[]): Wall {
   wallMaterial.opacity = 1
-  const wall: Wall = {
-    mesh: new Mesh(new BoxGeometry(WALL_SIZE, WALL_SIZE, 1), wallMaterial),
-    holeVectors: [],
-  }
+  const wallGeometry = new BoxGeometry(WALL_SIZE, WALL_SIZE, 1)
+  let wallCSG = CSG.fromGeometry(wallGeometry)
+  const holeVectors: Vector3[] = []
   for (const blockVector of blockVectors) {
-    if (wall.holeVectors.some((hv) => xyIsEqual(hv, blockVector))) {
+    if (holeVectors.some((hv) => xyIsEqual(hv, blockVector))) {
       continue
     }
     holeBlock.position.copy(blockVector)
     holeBlock.position.z = 0
-    wall.holeVectors.push(holeBlock.position.clone())
+    holeVectors.push(holeBlock.position.clone())
     holeBlock.updateMatrix()
-    wall.mesh = CSG.subtract(wall.mesh, holeBlock)
+    wallCSG = wallCSG.subtract(CSG.fromMesh(holeBlock))
   }
   const wallGrid = new GridHelper(WALL_SIZE, WALL_SIZE, 0, '#5b1b38')
   wallGrid.position.z = -0.5
   wallGrid.rotateX(Math.PI / 2)
-  wall.mesh.add(wallGrid)
-  return wall
+  const mesh = CSG.toMesh(wallCSG, new Matrix4(), wallMaterial)
+  mesh.add(wallGrid)
+  return {
+    mesh,
+    holeVectors,
+  }
 }
 
 export function rotateBlocks(blockVectors: Vector3[], axis: Vector3) {
@@ -173,16 +184,19 @@ export function getInvalidBlocksAtZ(
   return getInvalidBlocks(blockVectors, holeVectors).filter((bv) => bv.z === z)
 }
 
-export function removeBlocksFromClump(clump: Clump, removeVectors: Vector3[]) {
+export function removeBlocksFromClump(clump: Clump, removeVectors: Vector3[]): Mesh[] {
+  const removedMeshes: Mesh[] = []
   clump.blocks.forEach((mesh, vector) => {
     if (removeVectors.some((rv) => vector.equals(rv))) {
       clump.blocks.delete(vector)
       if (mesh) {
+        removedMeshes.push(mesh)
         mesh.removeFromParent()
         mesh.geometry.dispose()
       }
     }
   })
+  return removedMeshes
 }
 
 const shadowMaterial = new MeshBasicMaterial({ color: '#571533' })
@@ -196,6 +210,7 @@ function createShadowMesh(blocks: Mesh[], axis: 'x' | 'y' | 'z'): Mesh {
     const flatBlock = block.clone()
     flatBlock.position[axis] = 0
     flatBlock.updateMatrix()
+    // TODO: Use BufferGeometryUtils.mergeBufferGeometries instead
     shadow = CSG.union(shadow, flatBlock)
   }
   shadow!.material = shadowMaterial

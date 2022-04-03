@@ -1,4 +1,4 @@
-import { MeshPhongMaterial, Vector3 } from 'three'
+import { MeshLambertMaterial, Vector3 } from 'three'
 
 export function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -83,6 +83,6 @@ const blockMaterials = [
   '#ff0089',
   '#ff0000',
   '#ff5900',
-].map((color) => new MeshPhongMaterial({ color }))
+].map((color) => new MeshLambertMaterial({ color }))
 let color = 0
 export const getBlockMaterial = () => blockMaterials[color++ % blockMaterials.length]
