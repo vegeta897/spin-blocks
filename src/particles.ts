@@ -24,7 +24,7 @@ export function explodeBlock(block: Mesh, puzzle: Puzzle, turbo: boolean) {
     mesh.position.z += randFloatSpread(0.7)
     mesh.scale.setScalar(randFloat(0.08, 0.25))
     v2.set(turbo ? 0.1 : 0.06, 0).rotateAround(v2Zero, randFloat(0, Math.PI * 2))
-    const velocity = new Vector3(v2.x, v2.y, (turbo ? 0.2 : 0.05) + randFloatSpread(0.01))
+    const velocity = new Vector3(v2.x, v2.y, (turbo ? 0.25 : 0.08) + randFloatSpread(0.01))
     const rotation = new Quaternion().setFromAxisAngle(v3.randomDirection(), randFloat(0.02, 0.2))
     puzzle.particles.add({ mesh, velocity, rotation })
     puzzle.scene.add(mesh)
