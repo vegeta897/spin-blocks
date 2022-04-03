@@ -47,6 +47,7 @@ export function update(puzzle: Puzzle) {
           checkZ
         )
         if (invalidBlocks.length > 0) {
+          wall.mesh.position.z = checkZ - 1
           zoomInCamera(2)
           wallSpeed = 0
           const removedBlocks = removeBlocksFromClump(clump, invalidBlocks)

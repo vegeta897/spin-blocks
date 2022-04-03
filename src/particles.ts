@@ -10,25 +10,22 @@ export interface Particle {
   rotation: Quaternion
 }
 
+const v2Zero = new Vector2()
 const v2 = new Vector2()
+const v3 = new Vector3()
 export function explodeBlock(block: Mesh, puzzle: Puzzle, turbo: boolean) {
-  const fragments = randomInt(5, 8)
+  const fragments = randomInt(8, 16)
   for (let i = 0; i < fragments; i++) {
     const mesh = pickRandom(fragmentMeshes).clone()
     mesh.material = block.material
     mesh.position.copy(block.position)
-    mesh.position.add(new Vector3().random().setLength(0.5))
-    mesh.scale.setScalar(randFloat(0.1, 0.3))
-    const xyVelocity = new Vector2(turbo ? 0.1 : 0.06).rotateAround(v2, randFloat(0, Math.PI * 2))
-    const velocity = new Vector3(
-      xyVelocity.x,
-      xyVelocity.y,
-      (turbo ? 0.2 : 0.05) + randFloatSpread(0.01)
-    )
-    const rotation = new Quaternion().setFromAxisAngle(
-      new Vector3().randomDirection(),
-      randFloat(0.02, 0.2)
-    )
+    mesh.position.x += randFloatSpread(0.7)
+    mesh.position.y += randFloatSpread(0.7)
+    mesh.position.z += randFloatSpread(0.7)
+    mesh.scale.setScalar(randFloat(0.08, 0.25))
+    v2.set(turbo ? 0.1 : 0.06, 0).rotateAround(v2Zero, randFloat(0, Math.PI * 2))
+    const velocity = new Vector3(v2.x, v2.y, (turbo ? 0.2 : 0.05) + randFloatSpread(0.01))
+    const rotation = new Quaternion().setFromAxisAngle(v3.randomDirection(), randFloat(0.02, 0.2))
     puzzle.particles.add({ mesh, velocity, rotation })
     puzzle.scene.add(mesh)
   }
