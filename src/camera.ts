@@ -53,7 +53,7 @@ export function zoomInCamera(fovDecrease: number) {
 
 export function zoomCameraToDefault() {
   if (camera.fov === DEFAULT_FOV) return
-  camera.fov = Math.min(DEFAULT_FOV, camera.fov + (DEFAULT_FOV - camera.fov) / 5)
+  camera.fov = Math.min(DEFAULT_FOV, camera.fov + (DEFAULT_FOV - camera.fov) / 10)
   camera.updateProjectionMatrix()
 }
 
