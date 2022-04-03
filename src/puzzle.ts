@@ -23,7 +23,6 @@ import {
 import { get } from 'svelte/store'
 import { blockCount } from './store'
 import type { Particle } from './particles'
-import { explodeBlock } from './particles'
 
 export const CLUMP_DIAMETER = 7
 export const WALL_SIZE = CLUMP_DIAMETER + 2

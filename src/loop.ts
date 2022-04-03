@@ -12,7 +12,7 @@ import {
 import { blockCount } from './store'
 import type { MeshLambertMaterial } from 'three'
 import { lockControls, unlockControls } from './control'
-import { zoomCameraTo, zoomCameraToDefault, zoomInCamera } from './camera'
+import { zoomCameraToDefault, zoomInCamera } from './camera'
 import { explodeBlock, updateParticles } from './particles'
 
 let turboMode = false
@@ -69,7 +69,8 @@ export function update(puzzle: Puzzle) {
       1,
       (wall.mesh.position.z + wallSpeed ** 2) / (CLUMP_RADIUS + 2 + wallSpeed ** 2)
     )
-    ;(<MeshLambertMaterial>wall.mesh.material).opacity = 1 - fadeProgress
+    const wallMaterial = <MeshLambertMaterial>wall.mesh.material
+    wallMaterial.opacity = Math.min(1 - fadeProgress, wallMaterial.opacity)
   }
   if (wall.mesh.position.z > CLUMP_RADIUS + 2) {
     clump.blocks.set(getNextBlockPosition([...clump.blocks.keys()]), null)
