@@ -16,6 +16,38 @@ const Forward = new Vector3(0, 0, 1)
 const Back = new Vector3(0, 0, -1)
 
 export const CardinalAxes = [Right, Left, Up, Down, Forward, Back]
+export const possibleRotations: (Vector3 | [Vector3, number])[][] = [
+  [], // On bottom face
+  [Up],
+  [[Up, 2]],
+  [[Up, 3]],
+  [Right], // On front face
+  [Right, Up],
+  [Right, [Up, 2]],
+  [Right, [Up, 3]],
+  [Left], // On back face
+  [Left, Up],
+  [Left, [Up, 2]],
+  [Left, [Up, 3]],
+  [Forward], // On right face
+  [Forward, Up],
+  [Forward, [Up, 2]],
+  [Forward, [Up, 3]],
+  [Back], // On left face
+  [Back, Up],
+  [Back, [Up, 2]],
+  [Back, [Up, 3]],
+  [[Right, 2]], // On top face
+  [[Right, 2], Up],
+  [
+    [Right, 2],
+    [Up, 2],
+  ],
+  [
+    [Right, 2],
+    [Up, 3],
+  ],
+]
 
 export function get6Neighbors(origin = new Vector3()): Vector3[] {
   return CardinalAxes.map((dir) => origin.clone().add(dir))

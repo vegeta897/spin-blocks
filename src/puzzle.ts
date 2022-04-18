@@ -12,11 +12,10 @@ import {
 } from 'three'
 import { CSG } from 'three-csg-ts'
 import {
-  CardinalAxes,
   get6Neighbors,
   getBlockMaterial,
   pickRandom,
-  randomInt,
+  possibleRotations,
   xyEqualInAll,
   xyIsEqual,
 } from './util'
@@ -115,25 +114,26 @@ export function updateClumpBlockMeshes(clump: Clump) {
   }
 }
 
-// Pitch up, yaw left, roll left
-const randomAxes = [CardinalAxes[0], CardinalAxes[2], CardinalAxes[4]] as const
 export function randomizeRotation(blockVectors: Vector3[]) {
   if (blockVectors.length === 1) return
-  const shadowIsOneBlock = xyEqualInAll(blockVectors)
-  let attempts = 0
-  const clump = blockVectors.map((b) => b.clone())
+  let rotatedBlockVectors: Vector3[]
+  const rotationsToTry = new Set(possibleRotations)
   do {
-    // Rotate until clump does not fit in shadow
-    randomAxes.forEach((axis) => {
-      const rotations = randomInt(0, 3)
-      for (let i = 0; i < rotations; i++) {
-        rotateBlocks(blockVectors, axis)
+    rotatedBlockVectors = blockVectors.map((b) => b.clone())
+    const rotation = pickRandom([...rotationsToTry])
+    rotationsToTry.delete(rotation)
+    for (const rotateStep of rotation) {
+      const axis = 'isVector3' in rotateStep ? rotateStep : rotateStep[0]
+      const times = 'isVector3' in rotateStep ? 1 : rotateStep[1]
+      rotateBlocks(rotatedBlockVectors, axis, times)
+    }
+    if (getInvalidBlocks(blockVectors, rotatedBlockVectors).length > 0) {
+      for (let b = 0; b < blockVectors.length; b++) {
+        blockVectors[b].set(...rotatedBlockVectors[b].toArray())
       }
-    })
-    // No rotation will cause a one-block-shadow clump to be invalid
-    if (shadowIsOneBlock) break
-    attempts++
-  } while (getInvalidBlocks(clump, blockVectors).length === 0 && attempts < 100)
+      return
+    }
+  } while (rotationsToTry.size > 0)
 }
 
 const wallMaterial = new MeshPhongMaterial({ color: '#d22573', transparent: true })
@@ -164,9 +164,9 @@ export function createWall(blockVectors: Vector3[]): Wall {
   }
 }
 
-export function rotateBlocks(blockVectors: Vector3[], axis: Vector3) {
+export function rotateBlocks(blockVectors: Vector3[], axis: Vector3, times = 1) {
   blockVectors.forEach((blockVector) => {
-    blockVector.applyAxisAngle(axis, Math.PI / 2)
+    blockVector.applyAxisAngle(axis, times * (Math.PI / 2))
     blockVector.round()
   })
 }
