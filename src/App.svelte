@@ -4,22 +4,21 @@
 
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte'
-  import { get } from 'svelte/store'
-  import { gameState } from './store'
+  import { focused } from './store'
   import HUD from './HUD.svelte'
 
   let threeCanvas: HTMLCanvasElement
 
   onMount(() => {
-    const restarting = get(gameState) === 'stopped'
     initGame(threeCanvas)
-    if (document.hasFocus() || restarting) {
-      startGame()
-    } else {
-      window.addEventListener('focus', () => {
-        startGame()
-      })
-    }
+    startGame()
+    focused.set(document.hasFocus())
+    window.addEventListener('focus', () => {
+      focused.set(true)
+    })
+    window.addEventListener('blur', () => {
+      focused.set(false)
+    })
   })
   onDestroy(() => {
     stopGame()
@@ -27,8 +26,8 @@
 </script>
 
 <main>
-  <canvas class:blur={$gameState !== 'running'} bind:this={threeCanvas} />
-  {#if $gameState === 'running'}
+  <canvas class:blur={!$focused} bind:this={threeCanvas} />
+  {#if $focused}
     <HUD />
   {:else}
     <h1>Click to focus game</h1>
@@ -47,6 +46,9 @@
     font-size: 8vh;
   }
   .blur {
-    filter: blur(40px) brightness(0.5);
+    filter: blur(40px) brightness(0.7);
+  }
+  canvas {
+    transition: 200ms filter ease-out;
   }
 </style>

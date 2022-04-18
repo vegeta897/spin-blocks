@@ -9,7 +9,7 @@ import {
   updateClumpBlockMeshes,
   updateClumpShadows,
 } from './puzzle'
-import { blockCount } from './store'
+import { blockCount, focused } from './store'
 import type { MeshLambertMaterial } from 'three'
 import { lockControls, unlockControls } from './control'
 import { zoomCameraToDefault, zoomInCamera } from './camera'
@@ -25,7 +25,11 @@ const DEFAULT_WALL_SPEED = 0.15
 const MAX_WALL_SPEED = 5
 let wallSpeed = DEFAULT_WALL_SPEED
 
+let paused = false
+focused.subscribe((f) => (paused = !f))
+
 export function update(puzzle: Puzzle) {
+  if (paused) return
   updateParticles(puzzle.particles)
   const { wall, clump } = puzzle
   if (turboMode) {
