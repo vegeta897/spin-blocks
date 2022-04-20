@@ -76,6 +76,7 @@ module.exports = (env) => {
 
       new webpack.DefinePlugin({
         VERSION: JSON.stringify(pkg.version + 'r'),
+        DEV_MODE: JSON.stringify(false),
       }),
 
       new ESLintPlugin({

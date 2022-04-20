@@ -11,9 +11,10 @@ import { createPuzzle, WALL_SIZE } from './puzzle'
 import { initControls, animateClump, stopControls } from './control'
 import { getCamera, initCamera, resizeCamera, stopCamera, updateCamera } from './camera'
 import { update } from './loop'
-import { gameState } from './store'
+import { devMode, gameState } from './store'
 import { get } from 'svelte/store'
 import { Ticker } from './util'
+import Stats from 'stats.js'
 
 const TICK_RATE = 60
 
@@ -47,6 +48,17 @@ function resize() {
   resizeCamera()
 }
 
+const DEV_MODE = get(devMode)
+let updateStats: Stats
+let animateStats: Stats
+if (DEV_MODE) {
+  updateStats = new Stats()
+  animateStats = new Stats()
+  animateStats.dom.style.left = '80px'
+  document.body.appendChild(updateStats.dom)
+  document.body.appendChild(animateStats.dom)
+}
+
 let ticker: Ticker
 
 export const initGame = (canvas: HTMLCanvasElement) => {
@@ -59,12 +71,16 @@ export const initGame = (canvas: HTMLCanvasElement) => {
   renderer.render(scene, camera)
   ticker = new Ticker(
     () => {
+      if (DEV_MODE) updateStats.begin()
       update(puzzle)
       animateClump(puzzle)
+      if (DEV_MODE) updateStats.end()
     },
     (dt) => {
+      if (DEV_MODE) animateStats.begin()
       updateCamera()
       renderer.render(scene, camera)
+      if (DEV_MODE) animateStats.end()
     },
     TICK_RATE
   )

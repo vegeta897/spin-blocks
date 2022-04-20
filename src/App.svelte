@@ -4,7 +4,7 @@
 
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte'
-  import { focused } from './store'
+  import { focused, devMode } from './store'
   import HUD from './HUD.svelte'
 
   let threeCanvas: HTMLCanvasElement
@@ -26,8 +26,8 @@
 </script>
 
 <main>
-  <canvas class:blur={!$focused} bind:this={threeCanvas} />
-  {#if $focused}
+  <canvas class:blur={!$focused && !$devMode} bind:this={threeCanvas} />
+  {#if $focused || $devMode}
     <HUD />
   {:else}
     <h1>Click to focus game</h1>
