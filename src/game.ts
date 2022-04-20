@@ -1,9 +1,14 @@
 import {
   AmbientLight,
+  BoxGeometry,
   Color,
   DirectionalLight,
+  EdgesGeometry,
+  Fog,
   GridHelper,
   Group,
+  LineBasicMaterial,
+  LineSegments,
   Scene,
   WebGLRenderer,
 } from 'three'
@@ -19,7 +24,9 @@ import Stats from 'stats.js'
 const TICK_RATE = 60
 
 const scene = new Scene()
-scene.background = new Color('#330f1f')
+const bgColor = new Color('#330f1f')
+scene.background = bgColor
+scene.fog = new Fog(bgColor, 40, 55)
 let renderer: WebGLRenderer
 
 const ambientLight = new AmbientLight('#6b566b', 1)
@@ -37,6 +44,12 @@ gridTopBottom.add(gridBottom, gridTop)
 const gridLeftRight = gridTopBottom.clone()
 gridLeftRight.rotateZ(Math.PI / 2)
 scene.add(gridTopBottom, gridLeftRight)
+
+const centerShaftGeometry = new BoxGeometry(0.99, 0.99, 60)
+const centerShaftEdges = new EdgesGeometry(centerShaftGeometry)
+const line = new LineSegments(centerShaftEdges, new LineBasicMaterial({ color: '#981e56' }))
+line.position.z = -30.5
+scene.add(line)
 
 const puzzle = createPuzzle(scene)
 

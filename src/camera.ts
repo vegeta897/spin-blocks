@@ -14,7 +14,7 @@ const BOTTOM = -4.5
 let cameraX = 0
 let cameraY = 0
 
-const camera = new PerspectiveCamera(DEFAULT_FOV, window.innerWidth / window.innerHeight, 0.1, 100)
+const camera = new PerspectiveCamera(DEFAULT_FOV, window.innerWidth / window.innerHeight, 0.1, 60)
 
 function onMouseMove(e: MouseEvent) {
   const halfWidth = window.innerWidth / 2
